@@ -1,0 +1,115 @@
+
+> complejos@0.1.0 build
+> next build
+
+   Γû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 5 errors:
+./app/(dashboard)/inventario/page.tsx:3:1
+Module not found: Can't resolve '@/components/ui/input'
+  1 | import { createInventoryItem, getInventory } from "@/app/actions/inventory";
+  2 | import { Button } from "@/components/ui/button";
+> 3 | import { Input } from "@/components/ui/input";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  4 | import { Label } from "@/components/ui/label";
+  5 | import {
+  6 |     Table,
+
+Import map: aliased to relative './components/ui/input' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./app/(dashboard)/profesores/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/input'
+  2 | import { Button } from "@/components/ui/button";
+  3 | import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+> 4 | import { Input } from "@/components/ui/input";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import { Label } from "@/components/ui/label";
+  6 | import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  7 | import { Separator } from "@/components/ui/separator";
+
+Import map: aliased to relative './components/ui/input' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./app/(dashboard)/inventario/page.tsx:4:1
+Module not found: Can't resolve '@/components/ui/label'
+  2 | import { Button } from "@/components/ui/button";
+  3 | import { Input } from "@/components/ui/input";
+> 4 | import { Label } from "@/components/ui/label";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  5 | import {
+  6 |     Table,
+  7 |     TableBody,
+
+Import map: aliased to relative './components/ui/label' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./app/(dashboard)/profesores/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/label'
+  3 | import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+  4 | import { Input } from "@/components/ui/input";
+> 5 | import { Label } from "@/components/ui/label";
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  6 | import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+  7 | import { Separator } from "@/components/ui/separator";
+  8 | import { PlusCircle, Clock, Calendar, Trophy } from "lucide-react";
+
+Import map: aliased to relative './components/ui/label' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+./app/(dashboard)/inventario/page.tsx:5:1
+Module not found: Can't resolve '@/components/ui/table'
+   3 | import { Input } from "@/components/ui/input";
+   4 | import { Label } from "@/components/ui/label";
+>  5 | import {
+     | ^^^^^^^^
+>  6 |     Table,
+     | ^^^^^^^^^^
+>  7 |     TableBody,
+     | ^^^^^^^^^^
+>  8 |     TableCell,
+     | ^^^^^^^^^^
+>  9 |     TableHead,
+     | ^^^^^^^^^^
+> 10 |     TableHeader,
+     | ^^^^^^^^^^
+> 11 |     TableRow,
+     | ^^^^^^^^^^
+> 12 | } from "@/components/ui/table";
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  13 | import { PlusCircle } from "lucide-react";
+  14 |
+  15 | export default async function InventarioPage() {
+
+Import map: aliased to relative './components/ui/table' inside of [project]/
+
+
+https://nextjs.org/docs/messages/module-not-found
+
+
+    at <unknown> (./app/(dashboard)/inventario/page.tsx:3:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./app/(dashboard)/profesores/page.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./app/(dashboard)/inventario/page.tsx:4:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./app/(dashboard)/profesores/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)
+    at <unknown> (./app/(dashboard)/inventario/page.tsx:5:1)
+    at <unknown> (https://nextjs.org/docs/messages/module-not-found)

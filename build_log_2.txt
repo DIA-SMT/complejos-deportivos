@@ -1,0 +1,23 @@
+
+> complejos@0.1.0 build
+> next build
+
+   Γû▓ Next.js 16.0.8 (Turbopack)
+   - Environments: .env.local
+
+   Creating an optimized production build ...
+ Γ£ô Compiled successfully in 1480.4ms
+   Running TypeScript ...
+Failed to compile.
+
+.next/dev/types/validator.ts:51:39
+Type error: Cannot find module '../../../app/(dashboard)/resumen/page.js' or its corresponding type declarations.
+
+  49 | {
+  50 |   type __IsExpected<Specific extends AppPageConfig<"/resumen">> = Specific
+> 51 |   const handler = {} as typeof import("../../../app/(dashboard)/resumen/page.js")
+     |                                       ^
+  52 |   type __Check = __IsExpected<typeof handler>
+  53 |   // @ts-ignore
+  54 |   type __Unused = __Check
+Next.js build worker exited with code: 1 and signal: null

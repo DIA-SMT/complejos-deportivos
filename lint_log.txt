@@ -1,0 +1,41 @@
+
+> complejos@0.1.0 lint
+> eslint
+
+
+C:\Users\matia\complejos\app\(dashboard)\layout.tsx
+  3:10  warning  'Users' is defined but never used      @typescript-eslint/no-unused-vars
+  3:17  warning  'LogOut' is defined but never used     @typescript-eslint/no-unused-vars
+  5:10  warning  'Separator' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\matia\complejos\app\(dashboard)\profesores\page.tsx
+   6:10  warning  'Select' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+   6:18  warning  'SelectContent' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   6:33  warning  'SelectItem' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   6:45  warning  'SelectTrigger' is defined but never used                                                                            @typescript-eslint/no-unused-vars
+   6:60  warning  'SelectValue' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+   7:10  warning  'Separator' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   8:39  warning  'Trophy' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+  77:46  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  79:49  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  81:54  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  82:94  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+
+C:\Users\matia\complejos\app\(dashboard)\turnos\page.tsx
+  44:40  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  51:29  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\matia\complejos\components\sidebar.tsx
+  3:10  warning  'LayoutDashboard' is defined but never used                       @typescript-eslint/no-unused-vars
+  3:42  warning  'Trophy' is defined but never used                                @typescript-eslint/no-unused-vars
+  8:11  error    An interface declaring no members is equivalent to its supertype  @typescript-eslint/no-empty-object-type
+
+C:\Users\matia\complejos\components\turnos\day-card.tsx
+  7:13  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\matia\complejos\components\turnos\shift-item.tsx
+  2:10  warning  'Badge' is defined but never used  @typescript-eslint/no-unused-vars
+  3:10  warning  'cn' is defined but never used     @typescript-eslint/no-unused-vars
+
+Γ£û 22 problems (8 errors, 14 warnings)
+
