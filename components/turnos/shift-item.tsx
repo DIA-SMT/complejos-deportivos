@@ -17,15 +17,16 @@ interface ShiftItemProps {
             notes: string | null
         } | null
     }
+    isAdmin?: boolean
 }
 
-export function ShiftItem({ shift }: ShiftItemProps) {
+export function ShiftItem({ shift, isAdmin = false }: ShiftItemProps) {
     const isRecurring = !!shift.originalScheduleId;
     const hasReport = !!shift.report;
 
     return (
         <div className="group relative rounded-lg border bg-card text-card-foreground shadow-sm p-3 mb-2 flex flex-col gap-1 border-l-4 border-l-primary/20 hover:bg-accent/50 transition-colors">
-            {isRecurring && shift.date && (
+            {isRecurring && shift.date && isAdmin && (
                 <div className="absolute top-2 right-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10">
                     <ClassReportDialog
                         scheduleId={shift.originalScheduleId!}

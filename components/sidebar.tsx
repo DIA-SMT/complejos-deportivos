@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -105,6 +105,19 @@ export function Sidebar({ className }: SidebarProps) {
                             >
                                 <ClipboardList className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Reportes</span>
+                            </Button>
+                        </Link>
+                        <Link href="/perfil" onClick={handleLinkClick}>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "w-full",
+                                    isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                )}
+                                title={isCollapsed ? "Perfil" : undefined}
+                            >
+                                <User className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                <span className={cn(isCollapsed && "md:hidden")}>Mi Perfil</span>
                             </Button>
                         </Link>
                     </div>

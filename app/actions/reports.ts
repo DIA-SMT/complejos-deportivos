@@ -2,8 +2,12 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "./auth";
 
 export async function upsertClassReport(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const scheduleId = formData.get("scheduleId") as string;

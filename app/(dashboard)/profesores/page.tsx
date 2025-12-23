@@ -1,4 +1,5 @@
 import { addSchedule, createProfessor, getProfessors } from "@/app/actions/professors";
+import { getCurrentUser } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ import { ProfessorWorkloadChart } from "@/components/professor-workload-chart";
 
 export default async function ProfesoresPage() {
     const professors = (await getProfessors()) as unknown as ProfessorWithSchedules[];
+    const user = await getCurrentUser();
+    const isAdmin = user?.role === 'admin';
     // Courts removed as per user request
 
     const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
@@ -43,35 +46,37 @@ export default async function ProfesoresPage() {
             </div>
 
             <div className="grid gap-6 md:grid-cols-12">
-                {/* Columna Izquierda: Alta de Profesor */}
-                <div className="md:col-span-4 lg:col-span-3">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Nuevo Profesor</CardTitle>
-                            <CardDescription>Dar de alta un nuevo profesor.</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {/* @ts-expect-error Server Action return type mismatch */}
-                            <form action={createProfessor} className="grid gap-4">
-                                <div className="grid gap-2">
-                                    <Label htmlFor="fullName">Nombre Completo</Label>
-                                    <Input id="fullName" name="fullName" placeholder="Juan Pérez" required />
-                                </div>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input id="email" name="email" type="email" placeholder="juan@ejemplo.com" />
-                                </div>
-                                <Button type="submit" className="w-full">
-                                    <PlusCircle className="mr-2 h-4 w-4" />
-                                    Crear
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
-                </div>
+                {/* Columna Izquierda: Alta de Profesor - Solo visible para admin */}
+                {isAdmin && (
+                    <div className="md:col-span-4 lg:col-span-3">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Nuevo Profesor</CardTitle>
+                                <CardDescription>Dar de alta un nuevo profesor.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                {/* @ts-expect-error Server Action return type mismatch */}
+                                <form action={createProfessor} className="grid gap-4">
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="fullName">Nombre Completo</Label>
+                                        <Input id="fullName" name="fullName" placeholder="Juan Pérez" required />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="email">Email</Label>
+                                        <Input id="email" name="email" type="email" placeholder="juan@ejemplo.com" />
+                                    </div>
+                                    <Button type="submit" className="w-full">
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Crear
+                                    </Button>
+                                </form>
+                            </CardContent>
+                        </Card>
+                    </div>
+                )}
 
                 {/* Columna Derecha: Lista de Profesores y Horarios */}
-                <div className="md:col-span-8 lg:col-span-9">
+                <div className={isAdmin ? "md:col-span-8 lg:col-span-9" : "md:col-span-12"}>
                     {professors.length === 0 ? (
                         <div className="flex h-40 items-center justify-center rounded-lg border border-dashed">
                             <p className="text-muted-foreground">No hay profesores cargados.</p>
@@ -109,6 +114,7 @@ export default async function ProfesoresPage() {
                                                                         schedule={schedule}
                                                                         days={days}
                                                                         sports={sports}
+                                                                        isAdmin={isAdmin}
                                                                     />
                                                                 ))}
                                                             </div>
@@ -117,17 +123,19 @@ export default async function ProfesoresPage() {
                                                         )}
                                                     </div>
 
-                                                    {/* Formulario de Asignación de Horario */}
-                                                    <div className="space-y-4 border-t lg:border-t-0 lg:border-l pt-4 lg:pt-0 lg:pl-6 border-border">
-                                                        <h4 className="text-sm font-medium leading-none flex items-center gap-2">
-                                                            <Calendar className="h-4 w-4" /> Asignar Nuevo Horario
-                                                        </h4>
-                                                        <AddScheduleForm
-                                                            professorId={prof.id}
-                                                            days={days}
-                                                            sports={sports}
-                                                        />
-                                                    </div>
+                                                    {/* Formulario de Asignación de Horario - Solo visible para admin */}
+                                                    {isAdmin && (
+                                                        <div className="space-y-4 border-t lg:border-t-0 lg:border-l pt-4 lg:pt-0 lg:pl-6 border-border">
+                                                            <h4 className="text-sm font-medium leading-none flex items-center gap-2">
+                                                                <Calendar className="h-4 w-4" /> Asignar Nuevo Horario
+                                                            </h4>
+                                                            <AddScheduleForm
+                                                                professorId={prof.id}
+                                                                days={days}
+                                                                sports={sports}
+                                                            />
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="px-2 sm:px-6 pb-6 pt-2">
                                                     <div className="border-t pt-4">
