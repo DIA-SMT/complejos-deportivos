@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "./auth";
 
 export async function getProfessors() {
     const supabase = await createClient();
@@ -44,6 +45,9 @@ export async function getAllProfessorSchedules() {
 }
 
 export async function createProfessor(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const fullName = formData.get("fullName") as string;
@@ -68,6 +72,9 @@ export async function createProfessor(formData: FormData) {
 }
 
 export async function addSchedule(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const professorId = formData.get("professorId") as string;
@@ -100,6 +107,9 @@ export async function addSchedule(formData: FormData) {
 }
 
 export async function updateSchedule(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const scheduleId = formData.get("scheduleId") as string;
@@ -134,6 +144,9 @@ export async function updateSchedule(formData: FormData) {
 }
 
 export async function deleteSchedule(scheduleId: string) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const { error } = await supabase

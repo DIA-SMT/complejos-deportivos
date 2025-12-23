@@ -14,9 +14,10 @@ interface ScheduleItemProps {
     schedule: any;
     days: string[];
     sports: string[];
+    isAdmin?: boolean;
 }
 
-export function ScheduleItem({ schedule, days, sports }: ScheduleItemProps) {
+export function ScheduleItem({ schedule, days, sports, isAdmin = false }: ScheduleItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -141,27 +142,29 @@ export function ScheduleItem({ schedule, days, sports }: ScheduleItemProps) {
 
     return (
         <div className="group flex flex-col text-sm rounded-md border p-2 bg-muted/50 gap-2 relative hover:bg-muted/80 transition-colors">
-            <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => setIsEditing(true)}
-                >
-                    <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
-                </Button>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleDelete}
-                    disabled={isLoading}
-                >
-                    <Trash2 className="h-3.5 w-3.5 text-destructive/70 hover:text-destructive" />
-                </Button>
-            </div>
+            {isAdmin && (
+                <div className="absolute top-2 right-2 flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={() => setIsEditing(true)}
+                    >
+                        <Pencil className="h-3.5 w-3.5 text-muted-foreground hover:text-foreground" />
+                    </Button>
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={handleDelete}
+                        disabled={isLoading}
+                    >
+                        <Trash2 className="h-3.5 w-3.5 text-destructive/70 hover:text-destructive" />
+                    </Button>
+                </div>
+            )}
 
-            <div className="flex items-center justify-between pr-14 md:pr-16">
+            <div className={`flex items-center justify-between ${isAdmin ? 'pr-14 md:pr-16' : ''}`}>
                 <div className="flex gap-2 items-center">
                     <span className="font-semibold text-primary">{schedule.day_of_week}</span>
                     <span>{schedule.start_time?.slice(0, 5)} - {schedule.end_time?.slice(0, 5)}</span>

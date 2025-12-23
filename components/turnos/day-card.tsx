@@ -21,6 +21,7 @@ interface DayCardProps {
     dayName: string
     dateDisplay: string
     shifts: ShiftDisplay[]
+    isAdmin?: boolean
 }
 
 // Color mapping for each day of the week
@@ -69,7 +70,7 @@ const dayColors: Record<string, { bg: string; border: string; text: string; badg
     }
 }
 
-export function DayCard({ dayName, dateDisplay, shifts }: DayCardProps) {
+export function DayCard({ dayName, dateDisplay, shifts, isAdmin = false }: DayCardProps) {
     const shiftCount = shifts.length
     const normalizedDay = dayName.toLowerCase()
     const colors = dayColors[normalizedDay] || {
@@ -100,7 +101,7 @@ export function DayCard({ dayName, dateDisplay, shifts }: DayCardProps) {
                 ) : (
                     <div className="space-y-3">
                         {shifts.map((shift) => (
-                            <ShiftItem key={shift.id} shift={shift} />
+                            <ShiftItem key={shift.id} shift={shift} isAdmin={isAdmin} />
                         ))}
                     </div>
                 )}

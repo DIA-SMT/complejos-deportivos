@@ -2,6 +2,7 @@
 export const dynamic = 'force-dynamic';
 
 import { createClient } from "@/utils/supabase/server"
+import { getCurrentUser } from "@/app/actions/auth"
 import { DayCard } from "@/components/turnos/day-card"
 import { startOfWeek, endOfWeek, eachDayOfInterval, format, addWeeks, subWeeks } from "date-fns"
 import { es } from "date-fns/locale"
@@ -15,6 +16,8 @@ interface TurnosPageProps {
 export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     const params = await searchParams
     const supabase = await createClient()
+    const user = await getCurrentUser()
+    const isAdmin = user?.role === 'admin'
 
     const currentDate = params.week ? new Date(params.week + 'T00:00:00') : new Date()
     // Ensure monday start
@@ -161,6 +164,7 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
                             dayName={format(day, 'EEEE', { locale: es })}
                             dateDisplay={format(day, 'd MMM', { locale: es })}
                             shifts={dayShifts}
+                            isAdmin={isAdmin}
                         />
                     )
                 })}

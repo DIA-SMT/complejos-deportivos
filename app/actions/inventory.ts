@@ -2,6 +2,7 @@
 
 import { createClient } from "@/utils/supabase/server";
 import { revalidatePath } from "next/cache";
+import { requireAdmin } from "./auth";
 
 export async function getInventory() {
     const supabase = await createClient();
@@ -16,6 +17,9 @@ export async function getInventory() {
 }
 
 export async function createInventoryItem(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
     const supabase = await createClient();
 
     const name = formData.get("name") as string;
