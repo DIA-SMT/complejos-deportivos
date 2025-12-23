@@ -2,6 +2,7 @@ import { Sidebar } from "@/components/sidebar"
 import { SidebarProvider } from "@/components/sidebar-context"
 import { DashboardContent } from "./dashboard-content"
 import { getCurrentUser } from "@/app/actions/auth"
+import { Chatbot } from "@/components/chatbot/chatbot"
 
 export default async function DashboardLayout({
     children,
@@ -15,6 +16,7 @@ export default async function DashboardLayout({
     return (
         <SidebarProvider>
             <DashboardContent user={user}>{children}</DashboardContent>
+            <Chatbot />
         </SidebarProvider>
     )
 }
