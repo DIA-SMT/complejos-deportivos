@@ -18,7 +18,7 @@ export function Chatbot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: '¡Hola! Soy tu asistente virtual. Puedo ayudarte a consultar información sobre inventario, profesores, horarios y turnos. ¿En qué puedo ayudarte?'
+            content: '¡Buenas! Soy tu asistente virtual. ¿Qué necesitás saber sobre el complejo? Estoy para darte una mano.'
         }
     ])
     const [input, setInput] = useState("")
