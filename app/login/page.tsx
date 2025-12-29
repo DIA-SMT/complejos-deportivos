@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { createClient } from "@/utils/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -47,7 +48,16 @@ export default function LoginPage() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">
             <Card className="w-full max-w-md">
-                <CardHeader className="space-y-1">
+                <CardHeader className="space-y-1 flex flex-col items-center">
+                    <div className="mb-4">
+                        <Image
+                            src="/logoMuni-sm.png"
+                            alt="Logo Municipalidad San Miguel de Tucumán"
+                            width={150}
+                            height={50}
+                            className="h-auto w-auto object-contain max-h-20"
+                        />
+                    </div>
                     <CardTitle className="text-2xl font-bold text-center">
                         Complejos Deportivos
                     </CardTitle>
@@ -90,6 +100,12 @@ export default function LoginPage() {
                             {loading ? "Iniciando sesión..." : "Iniciar sesión"}
                         </Button>
                     </form>
+
+                    <div className="mt-8 text-xs text-muted-foreground text-center space-y-1">
+                        <p>© {new Date().getFullYear()}</p>
+                        <p>Desarrollado por la Dirección de Inteligencia Artificial</p>
+                        <p>Municipalidad de San Miguel de Tucumán</p>
+                    </div>
                 </CardContent>
             </Card>
         </div>
