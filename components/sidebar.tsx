@@ -1,6 +1,7 @@
 "use client"
 
 import Link from "next/link"
+import Image from "next/image"
 import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -20,8 +21,8 @@ export function Sidebar({ className }: SidebarProps) {
     }
 
     return (
-        <div className={cn("pb-12 transition-all duration-300", className)}>
-            <div className="space-y-4 py-4">
+        <div className={cn("pb-4 h-full flex flex-col transition-all duration-300", className)}>
+            <div className="space-y-4 py-4 flex-1">
                 <div className="px-3 py-2">
                     {/* Toggle Button - Only show on desktop */}
                     <div className={cn("hidden md:flex items-center mb-4", isCollapsed ? "justify-center" : "justify-end px-4")}>
@@ -123,6 +124,24 @@ export function Sidebar({ className }: SidebarProps) {
                     </div>
                 </div>
             </div>
+
+            {/* Footer */}
+            {!isCollapsed && (
+                <div className="px-4 py-2 mt-auto text-xs text-muted-foreground text-center">
+                    <div className="flex justify-center mb-4">
+                        <Image
+                            src="/logoMuni-sm.png"
+                            alt="Logo Municipalidad San Miguel de Tucumán"
+                            width={150}
+                            height={50}
+                            className="h-auto w-auto object-contain max-h-16 opacity-80 hover:opacity-100 transition-opacity"
+                        />
+                    </div>
+                    <p>© {new Date().getFullYear()}</p>
+                    <p>Desarrollado por la Dirección de Inteligencia Artificial</p>
+                    <p>Municipalidad de San Miguel de Tucumán</p>
+                </div>
+            )}
         </div>
     )
 }
