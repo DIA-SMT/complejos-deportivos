@@ -22,7 +22,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
             {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden"
+                    className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
                     onClick={() => setIsMobileOpen(false)}
                 />
             )}
@@ -30,7 +30,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
             {/* Sidebar - Desktop */}
             <aside
                 className={cn(
-                    "hidden md:block border-r bg-background fixed h-full inset-y-0 z-30 transition-all duration-300",
+                    "hidden md:block border-r bg-background fixed h-full inset-y-0 z-30 transition-all duration-300 ease-in-out",
                     isCollapsed ? "w-16" : "w-64"
                 )}
             >
@@ -40,7 +40,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
             {/* Sidebar - Mobile */}
             <aside
                 className={cn(
-                    "md:hidden fixed h-full inset-y-0 left-0 z-50 w-64 border-r bg-background transition-transform duration-300 ease-in-out",
+                    "md:hidden fixed h-full inset-y-0 left-0 z-50 w-64 border-r bg-background transition-all duration-300 ease-in-out animate-slide-in-left",
                     isMobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
@@ -50,18 +50,18 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
             {/* Main Content */}
             <main
                 className={cn(
-                    "flex-1 flex flex-col min-h-screen transition-all duration-300",
+                    "flex-1 flex flex-col min-h-screen transition-all duration-300 ease-in-out",
                     isCollapsed ? "md:ml-16" : "md:ml-64"
                 )}
             >
                 {/* Top Header */}
-                <header className="flex h-14 md:h-16 items-center justify-between border-b px-4 md:px-6">
-                    <div className="flex items-center gap-4">
+                <header className="flex h-14 md:h-16 items-center justify-between border-b px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20">
+                    <div className="flex items-center gap-4 animate-slide-in-down">
                         {/* Mobile Menu Button */}
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="md:hidden"
+                            className="md:hidden hover-lift transition-smooth"
                             onClick={toggleMobileSidebar}
                         >
                             {isMobileOpen ? (
@@ -73,18 +73,18 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                         {/* Placeholder for complex selector or breadcrumb */}
                         <span className="text-xs md:text-sm font-medium">Seleccioná un complejo</span>
                     </div>
-                    <div className="flex items-center gap-2 text-sm">
+                    <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
                         {user ? (
                             <>
                                 <Link href="/perfil">
                                     <Button
                                         variant="ghost"
                                         size="sm"
-                                        className="gap-2"
+                                        className="gap-2 hover-lift transition-smooth"
                                     >
                                         <User className="h-4 w-4" />
                                         <span className="hidden md:inline text-xs">{user.email}</span>
-                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs">
+                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs transition-all duration-300">
                                             {user.role === 'admin' ? 'Admin' : 'Usuario'}
                                         </Badge>
                                     </Button>
@@ -94,7 +94,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                                         type="submit"
                                         variant="ghost"
                                         size="sm"
-                                        className="gap-2"
+                                        className="gap-2 hover-lift transition-smooth"
                                         title="Cerrar sesión"
                                     >
                                         <LogOut className="h-4 w-4" />
@@ -109,7 +109,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 space-y-4 p-4 md:p-8 pt-4 md:pt-6">
+                <div className="flex-1 space-y-4 p-4 md:p-8 pt-4 md:pt-6 animate-fade-in">
                     {children}
                 </div>
             </main>

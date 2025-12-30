@@ -20,7 +20,7 @@ export default async function InventarioPage() {
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-slide-in-down">
                 <div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Inventario</h2>
                     <p className="text-sm sm:text-base text-muted-foreground">
@@ -32,8 +32,8 @@ export default async function InventarioPage() {
             <div className="grid gap-6 lg:grid-cols-3">
                 {/* Formulario de Alta - Solo visible para admin */}
                 {isAdmin && (
-                    <div className="lg:col-span-1">
-                        <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+                    <div className="lg:col-span-1 animate-slide-in-up animation-delay-100">
+                        <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover-lift">
                             <div className="flex flex-col space-y-1.5 p-6">
                                 <h3 className="font-semibold leading-none tracking-tight">Agregar Item</h3>
                                 <p className="text-sm text-muted-foreground">Nuevo elemento al inventario.</p>
@@ -43,17 +43,17 @@ export default async function InventarioPage() {
                                 <form action={createInventoryItem} className="grid gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">Nombre</Label>
-                                        <Input id="name" name="name" placeholder="Ej: Pelota de Fútbol" required />
+                                        <Input id="name" name="name" placeholder="Ej: Pelota de Fútbol" required className="transition-smooth" />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="quantity">Cantidad</Label>
-                                        <Input id="quantity" name="quantity" type="number" placeholder="0" required />
+                                        <Input id="quantity" name="quantity" type="number" placeholder="0" required className="transition-smooth" />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="description">Descripción (Opcional)</Label>
-                                        <Input id="description" name="description" placeholder="Marca, estado, etc." />
+                                        <Input id="description" name="description" placeholder="Marca, estado, etc." className="transition-smooth" />
                                     </div>
-                                    <Button type="submit" className="w-full">
+                                    <Button type="submit" className="w-full hover-lift transition-smooth">
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Agregar
                                     </Button>
@@ -64,8 +64,8 @@ export default async function InventarioPage() {
                 )}
 
                 {/* Tabla de Inventario */}
-                <div className={isAdmin ? "lg:col-span-2" : "lg:col-span-3"}>
-                    <div className="rounded-md border overflow-x-auto">
+                <div className={isAdmin ? "lg:col-span-2 animate-slide-in-up animation-delay-200" : "lg:col-span-3 animate-slide-in-up animation-delay-100"}>
+                    <div className="rounded-md border overflow-x-auto hover-lift">
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -82,8 +82,8 @@ export default async function InventarioPage() {
                                         </TableCell>
                                     </TableRow>
                                 ) : (
-                                    inventory.map((item) => (
-                                        <TableRow key={item.id}>
+                                    inventory.map((item, index) => (
+                                        <TableRow key={item.id} className="transition-all duration-200 hover:bg-muted/50 animate-fade-in" style={{ animationDelay: `${index * 50}ms` }}>
                                             <TableCell className="font-medium">
                                                 <div className="flex flex-col">
                                                     <span>{item.name}</span>
