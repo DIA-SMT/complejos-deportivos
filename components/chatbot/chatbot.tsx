@@ -18,7 +18,7 @@ export function Chatbot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: '¡Buenas! Soy tu asistente virtual. ¿Qué necesitás saber sobre el complejo? Estoy para darte una mano.'
+            content: '¡Buenas! Soy El DT ⚽. ¿Qué necesitás saber sobre el complejo? Estoy para darte una mano.'
         }
     ])
     const [input, setInput] = useState("")
@@ -104,8 +104,8 @@ export function Chatbot() {
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b flex-shrink-0">
                         <CardTitle className="text-base md:text-lg flex items-center gap-2">
                             <Bot className="h-4 w-4 md:h-5 md:w-5" />
-                            <span className="hidden sm:inline">Asistente Virtual</span>
-                            <span className="sm:hidden">Asistente</span>
+                            <span className="hidden sm:inline">El DT ⚽ Asistente Virtual</span>
+                            <span className="sm:hidden">El DT</span>
                         </CardTitle>
                         <Button
                             variant="ghost"

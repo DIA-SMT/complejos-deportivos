@@ -36,7 +36,7 @@ export default async function ProfesoresPage() {
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between animate-slide-in-down">
                 <div>
                     <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Profesores y Horarios</h2>
                     <p className="text-sm sm:text-base text-muted-foreground">
@@ -48,8 +48,8 @@ export default async function ProfesoresPage() {
             <div className="grid gap-6 md:grid-cols-12">
                 {/* Columna Izquierda: Alta de Profesor - Solo visible para admin */}
                 {isAdmin && (
-                    <div className="md:col-span-4 lg:col-span-3">
-                        <Card>
+                    <div className="md:col-span-4 lg:col-span-3 animate-slide-in-up animation-delay-100">
+                        <Card className="hover-lift">
                             <CardHeader>
                                 <CardTitle>Nuevo Profesor</CardTitle>
                                 <CardDescription>Dar de alta un nuevo profesor.</CardDescription>
@@ -59,13 +59,13 @@ export default async function ProfesoresPage() {
                                 <form action={createProfessor} className="grid gap-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="fullName">Nombre Completo</Label>
-                                        <Input id="fullName" name="fullName" placeholder="Juan Pérez" required />
+                                        <Input id="fullName" name="fullName" placeholder="Juan Pérez" required className="transition-smooth" />
                                     </div>
                                     <div className="grid gap-2">
                                         <Label htmlFor="email">Email</Label>
                                         <Input id="email" name="email" type="email" placeholder="juan@ejemplo.com" />
                                     </div>
-                                    <Button type="submit" className="w-full">
+                                    <Button type="submit" className="w-full hover-lift transition-smooth">
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Crear
                                     </Button>
@@ -82,7 +82,7 @@ export default async function ProfesoresPage() {
                             <p className="text-muted-foreground">No hay profesores cargados.</p>
                         </div>
                     ) : (
-                        <Card>
+                        <Card className="animate-slide-in-up animation-delay-200 hover-lift">
                             <CardHeader>
                                 <CardTitle>Lista de Profesores</CardTitle>
                                 <CardDescription>Hacé click en un profesor para ver o administrar sus horarios.</CardDescription>
@@ -90,7 +90,7 @@ export default async function ProfesoresPage() {
                             <CardContent>
                                 <Accordion type="single" collapsible className="w-full">
                                     {professors.map((prof) => (
-                                        <AccordionItem key={prof.id} value={prof.id} className="bg-blue-50/50 border-blue-100 mb-2 rounded-md overflow-hidden dark:bg-blue-950/20 dark:border-blue-900">
+                                        <AccordionItem key={prof.id} value={prof.id} className="bg-blue-50/50 border-blue-100 mb-2 rounded-md overflow-hidden dark:bg-blue-950/20 dark:border-blue-900 transition-all duration-300 hover:shadow-md">
                                             <AccordionTrigger className="hover:no-underline px-3 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-colors">
                                                 <div className="flex flex-col items-start text-left">
                                                     <span className="text-sm sm:text-base font-semibold">{prof.full_name}</span>

@@ -45,7 +45,7 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
     }
 
     return (
-        <div className={cn("flex flex-col h-full bg-background", !headless && "rounded-lg border shadow-sm")}>
+        <div className={cn("flex flex-col h-full bg-background animate-fade-in", !headless && "rounded-lg border shadow-sm")}>
             {/* Header - Only show if not headless */}
             {!headless && (
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border-b gap-4">
@@ -55,13 +55,13 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
 
                     <div className="flex items-center gap-2 w-full md:w-auto justify-between md:justify-end">
                         <div className="flex items-center gap-2 ml-4">
-                            <Button variant="outline" size="icon" onClick={() => changeMonth(-1)} className="h-8 w-8">
+                            <Button variant="outline" size="icon" onClick={() => changeMonth(-1)} className="h-8 w-8 hover-lift transition-smooth">
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
                             <span className="text-sm font-semibold min-w-[120px] text-center capitalize">
                                 {format(currentDate, "MMMM yyyy", { locale: es })}
                             </span>
-                            <Button variant="outline" size="icon" onClick={() => changeMonth(1)} className="h-8 w-8">
+                            <Button variant="outline" size="icon" onClick={() => changeMonth(1)} className="h-8 w-8 hover-lift transition-smooth">
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
@@ -93,16 +93,17 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
                         <div
                             key={dateKey}
                             className={cn(
-                                "min-h-[100px] md:min-h-[120px] p-1 md:p-2 border-b border-r flex flex-col transition-colors hover:bg-muted/30",
+                                "min-h-[100px] md:min-h-[120px] p-1 md:p-2 border-b border-r flex flex-col transition-all duration-300 hover:bg-muted/40 hover:shadow-inner animate-fade-in",
                                 !isCurrentMonth && "bg-muted/5 text-muted-foreground",
-                                isToday && "bg-blue-50/50"
+                                isToday && "bg-blue-50/50 ring-2 ring-blue-200 ring-inset"
                             )}
+                            style={{ animationDelay: `${index * 20}ms` }}
                         >
                             <div className="flex justify-between items-start mb-1">
                                 <span
                                     className={cn(
-                                        "text-xs md:text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full",
-                                        isToday ? "bg-blue-600 text-white" : "text-muted-foreground"
+                                        "text-xs md:text-sm font-medium h-6 w-6 flex items-center justify-center rounded-full transition-all duration-300",
+                                        isToday ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30 animate-pulse-glow" : "text-muted-foreground"
                                     )}
                                 >
                                     {format(dayItem, "d")}
@@ -110,16 +111,17 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-1 scrollbar-none">
-                                {dayShifts.map((shift: any) => (
+                                {dayShifts.map((shift: any, shiftIndex: number) => (
                                     <div
                                         key={shift.id}
                                         onClick={(e) => handleShiftClick(e, shift)}
                                         className={cn(
-                                            "group relative px-1.5 py-1 rounded text-[10px] md:text-xs truncate cursor-pointer transition-all hover:scale-[1.02] hover:shadow-sm border-l-2",
-                                            shift.status === 'completed' ? "bg-green-100 text-green-700 border-green-500" :
-                                                shift.status === 'cancelled' ? "bg-red-100 text-red-700 border-red-500" :
-                                                    "bg-blue-100 text-blue-700 border-blue-500"
+                                            "group relative px-1.5 py-1 rounded text-[10px] md:text-xs truncate cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-lg border-l-2 animate-slide-in-up",
+                                            shift.status === 'completed' ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" :
+                                                shift.status === 'cancelled' ? "bg-red-100 text-red-700 border-red-500 hover:bg-red-200" :
+                                                    "bg-blue-100 text-blue-700 border-blue-500 hover:bg-blue-200"
                                         )}
+                                        style={{ animationDelay: `${shiftIndex * 50}ms` }}
                                         title={`${shift.start_time.slice(0, 5)} - ${shift.group_name || shift.court_name}`}
                                     >
                                         <span className="font-semibold mr-1">{shift.start_time.slice(0, 5)}</span>

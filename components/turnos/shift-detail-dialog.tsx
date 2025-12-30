@@ -13,6 +13,7 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Calendar, Clock, User, Award, MapPin } from "lucide-react"
 import { getSportEmoji } from "@/lib/utils/sport-emojis"
+import { cn } from "@/lib/utils"
 
 interface ShiftDetailDialogProps {
     isOpen: boolean
@@ -35,11 +36,11 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
+            <DialogContent className="sm:max-w-[425px] animate-scale-in">
+                <DialogHeader className="animate-slide-in-down">
                     <DialogTitle className="flex justify-between items-center mr-6">
                         <span>{getSportEmoji(shift.group_name || shift.court_name || "")} {shift.group_name || "Turno"}</span>
-                        <Badge variant="secondary" className={statusColor}>
+                        <Badge variant="secondary" className={cn(statusColor, "transition-all duration-300")}>
                             {statusLabel}
                         </Badge>
                     </DialogTitle>
@@ -49,7 +50,7 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
                 </DialogHeader>
 
                 <div className="grid gap-4 py-4">
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 animate-slide-in-up animation-delay-100 hover-lift transition-smooth p-2 rounded-lg">
                         <Calendar className="h-5 w-5 text-muted-foreground" />
                         <div>
                             <p className="text-sm font-medium">Fecha</p>
@@ -59,7 +60,7 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 animate-slide-in-up animation-delay-200 hover-lift transition-smooth p-2 rounded-lg">
                         <Clock className="h-5 w-5 text-muted-foreground" />
                         <div>
                             <p className="text-sm font-medium">Horario</p>
@@ -69,7 +70,7 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 animate-slide-in-up animation-delay-300 hover-lift transition-smooth p-2 rounded-lg">
                         <MapPin className="h-5 w-5 text-muted-foreground" />
                         <div>
                             <p className="text-sm font-medium">Cancha/Espacio</p>
@@ -77,7 +78,7 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3 animate-slide-in-up animation-delay-400 hover-lift transition-smooth p-2 rounded-lg">
                         <User className="h-5 w-5 text-muted-foreground" />
                         <div>
                             <p className="text-sm font-medium">Profesor</p>
@@ -86,8 +87,8 @@ export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogP
                     </div>
                 </div>
 
-                <div className="flex justify-end">
-                    <Button onClick={onClose}>Cerrar</Button>
+                <div className="flex justify-end animate-fade-in animation-delay-400">
+                    <Button onClick={onClose} className="hover-lift transition-smooth">Cerrar</Button>
                 </div>
             </DialogContent>
         </Dialog>
