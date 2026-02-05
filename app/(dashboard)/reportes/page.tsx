@@ -76,6 +76,10 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
     const prevWeek = subWeeks(weekStart, 1).toISOString().split('T')[0]
     const nextWeek = addWeeks(weekStart, 1).toISOString().split('T')[0]
 
+    // Check if we're at current week or beyond (disable next button)
+    const currentWeekStartOfToday = startOfWeek(today, { weekStartsOn: 1 })
+    const isAtCurrentWeekOrBeyond = weekStart >= currentWeekStartOfToday
+
     // Helper to get day name
     const getDayName = (dateStr: string) => {
         const date = parseISO(dateStr)
@@ -109,11 +113,17 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                             <span className="text-xs sm:text-base">{formattedRange}</span>
                         </div>
                     </div>
-                    <Button variant="outline" size="icon" asChild>
-                        <Link href={`/reportes?week=${nextWeek}`}>
+                    {isAtCurrentWeekOrBeyond ? (
+                        <Button variant="outline" size="icon" disabled className="opacity-50 cursor-not-allowed">
                             <ChevronRight className="h-4 w-4" />
-                        </Link>
-                    </Button>
+                        </Button>
+                    ) : (
+                        <Button variant="outline" size="icon" asChild>
+                            <Link href={`/reportes?week=${nextWeek}`}>
+                                <ChevronRight className="h-4 w-4" />
+                            </Link>
+                        </Button>
+                    )}
                 </div>
                 <div className="text-sm text-muted-foreground">
                     Total reportes: <span className="font-medium text-foreground">{reports?.length || 0}</span>
