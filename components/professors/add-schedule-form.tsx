@@ -29,7 +29,8 @@ export function AddScheduleForm({ professorId, days, sports }: AddScheduleFormPr
         }
 
         setIsSubmitting(true);
-        const formData = new FormData(e.currentTarget);
+        const form = e.currentTarget;
+        const formData = new FormData(form);
 
         const result = await addSchedule(formData);
 
@@ -40,7 +41,7 @@ export function AddScheduleForm({ professorId, days, sports }: AddScheduleFormPr
         } else {
             toast.success("Horario asignado correctamente");
             // Reset form
-            e.currentTarget.reset();
+            form.reset();
             setStartTime("");
             setEndTime("");
         }

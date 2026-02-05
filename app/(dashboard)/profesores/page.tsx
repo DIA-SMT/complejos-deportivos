@@ -1,14 +1,11 @@
-import { addSchedule, createProfessor, getProfessors } from "@/app/actions/professors";
+import { getProfessors } from "@/app/actions/professors";
 import { getCurrentUser } from "@/app/actions/auth";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { PlusCircle, Clock, Calendar, ClipboardList } from "lucide-react";
+import { Clock, Calendar, ClipboardList } from "lucide-react";
 import { Database } from "@/types/database.types";
-import { Textarea } from "../../../components/ui/textarea";
 import { ScheduleItem } from "@/components/schedule-item";
 import { AddScheduleForm } from "@/components/professors/add-schedule-form";
+import { CreateProfessorForm } from "@/components/professors/create-professor-form";
 
 type ProfessorWithSchedules = Database['public']['Tables']['professors']['Row'] & {
     professor_schedules: (Database['public']['Tables']['professor_schedules']['Row'] & {
@@ -55,21 +52,7 @@ export default async function ProfesoresPage() {
                                 <CardDescription>Dar de alta un nuevo profesor.</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                {/* @ts-expect-error Server Action return type mismatch */}
-                                <form action={createProfessor} className="grid gap-4">
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="fullName">Nombre Completo</Label>
-                                        <Input id="fullName" name="fullName" placeholder="Juan Pérez" required className="transition-smooth" />
-                                    </div>
-                                    <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input id="email" name="email" type="email" placeholder="juan@ejemplo.com" />
-                                    </div>
-                                    <Button type="submit" className="w-full hover-lift transition-smooth">
-                                        <PlusCircle className="mr-2 h-4 w-4" />
-                                        Crear
-                                    </Button>
-                                </form>
+                                <CreateProfessorForm />
                             </CardContent>
                         </Card>
                     </div>

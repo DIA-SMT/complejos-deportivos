@@ -70,12 +70,14 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
 
             {/* Calendar Body */}
             <div className="flex-1 overflow-y-auto scrollbar-thin">
-                <div className="grid grid-cols-8 min-h-[800px] relative">
+                <div className="grid grid-cols-8 min-h-[960px] relative">
                     {/* Time Column */}
                     <div className="border-r bg-muted/10">
                         {hours.map((hour) => (
-                            <div key={hour} className="h-[50px] border-b text-xs text-muted-foreground p-1 text-right relative transition-colors hover:bg-muted/20">
-                                <span className="absolute -top-2 right-1">{`${hour}:00`}</span>
+                            <div key={hour} className="h-[60px] border-b text-xs text-muted-foreground relative transition-colors hover:bg-muted/20">
+                                <span className="absolute -top-3 right-2 bg-background px-1 font-medium text-[11px]">
+                                    {`${hour.toString().padStart(2, '0')}:00`}
+                                </span>
                             </div>
                         ))}
                     </div>
@@ -89,7 +91,7 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
                             <div key={dateKey} className="border-r last:border-r-0 relative border-b-0 transition-colors hover:bg-muted/10">
                                 {/* Grid lines */}
                                 {hours.map((hour) => (
-                                    <div key={hour} className="h-[50px] border-b" />
+                                    <div key={hour} className="h-[60px] border-b" />
                                 ))}
 
                                 {/* Events */}
@@ -98,19 +100,21 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
                                         key={shift.id}
                                         onClick={(e) => handleShiftClick(e, shift)}
                                         className={cn(
-                                            "absolute inset-x-1 rounded p-1 text-[10px] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:z-20 border-l-2 z-10 animate-scale-in",
-                                            shift.status === 'completed' ? "bg-green-100 text-green-700 border-green-500 hover:bg-green-200" :
-                                                shift.status === 'cancelled' ? "bg-red-100 text-red-700 border-red-500 hover:bg-red-200" :
-                                                    "bg-blue-100 text-blue-700 border-blue-500 hover:bg-blue-200"
+                                            "absolute inset-x-1 rounded-md p-1.5 text-[11px] overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:z-20 border-l-3 z-10 animate-scale-in",
+                                            shift.status === 'completed' ? "bg-green-100 text-green-800 border-green-500 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300" :
+                                                shift.status === 'cancelled' ? "bg-red-100 text-red-800 border-red-500 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300" :
+                                                    "bg-blue-100 text-blue-800 border-blue-500 hover:bg-blue-200 dark:bg-blue-900/30 dark:text-blue-300"
                                         )}
                                         style={{ ...getShiftStyle(shift), animationDelay: `${shiftIndex * 100}ms` }}
-                                        title={`${shift.start_time.slice(0, 5)} - ${shift.group_name || shift.court_name}`}
+                                        title={`${shift.start_time.slice(0, 5)} - ${shift.end_time.slice(0, 5)} | ${shift.group_name || shift.court_name}`}
                                     >
-                                        <div className="font-bold leading-tight transition-transform duration-200 group-hover:scale-110">
+                                        <div className="font-semibold leading-tight truncate">
                                             {getSportEmoji(shift.group_name || shift.court_name)} {shift.group_name || shift.court_name}
                                         </div>
-                                        <div className="hidden lg:block text-[9px] opacity-90">{shift.court_name}</div>
-                                        <div className="text-[9px] mt-0.5 font-medium">{shift.start_time.slice(0, 5)}</div>
+                                        <div className="text-[10px] opacity-80 truncate">{shift.court_name}</div>
+                                        <div className="text-[10px] mt-0.5 font-medium opacity-90">
+                                            {shift.start_time.slice(0, 5)} - {shift.end_time.slice(0, 5)}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

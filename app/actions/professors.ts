@@ -99,7 +99,7 @@ export async function addSchedule(formData: FormData) {
 
     if (error) {
         console.error("Error adding schedule:", error);
-        return { error: "Error al asignar horario" };
+        return { error: `Error al asignar horario: ${error.message || 'Error desconocido'}` };
     }
 
     revalidatePath("/profesores");
