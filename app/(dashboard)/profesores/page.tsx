@@ -6,6 +6,7 @@ import { Database } from "@/types/database.types";
 import { ScheduleItem } from "@/components/schedule-item";
 import { AddScheduleForm } from "@/components/professors/add-schedule-form";
 import { CreateProfessorForm } from "@/components/professors/create-professor-form";
+import { ProfessorActions } from "@/components/professors/professor-actions";
 
 type ProfessorWithSchedules = Database['public']['Tables']['professors']['Row'] & {
     professor_schedules: (Database['public']['Tables']['professor_schedules']['Row'] & {
@@ -33,11 +34,23 @@ export default async function ProfesoresPage() {
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="flex items-center justify-between animate-slide-in-down">
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Profesores y Horarios</h2>
-                    <p className="text-sm sm:text-base text-muted-foreground">
-                        Administrá el staff de profesores, sus horarios de clases y asignaciones de canchas.
+            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+                <div className="absolute inset-0 bg-blue-900/20">
+                    <img
+                        src="/images/profesores.png"
+                        alt="Fondo Profesores"
+                        className="absolute inset-0 w-full h-full object-cover transform scale-110"
+                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-900/60 to-transparent dark:from-black/90 dark:via-black/60 mix-blend-multiply"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 text-white space-y-2">
+                    <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight drop-shadow-md animate-slide-in-left">
+                        Profesores y Horarios
+                    </h2>
+                    <p className="text-base sm:text-lg text-blue-100 max-w-2xl font-light drop-shadow animate-slide-in-left animation-delay-200">
+                        Gestioná el equipo de profesionales, organizá los cronogramas de clases y optimizá el uso de las instalaciones deportivas.
                     </p>
                 </div>
             </div>
@@ -74,12 +87,19 @@ export default async function ProfesoresPage() {
                                 <Accordion type="single" collapsible className="w-full">
                                     {professors.map((prof) => (
                                         <AccordionItem key={prof.id} value={prof.id} className="bg-blue-50/50 border-blue-100 mb-2 rounded-md overflow-hidden dark:bg-blue-950/20 dark:border-blue-900 transition-all duration-300 hover:shadow-md">
-                                            <AccordionTrigger className="hover:no-underline px-3 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-colors">
-                                                <div className="flex flex-col items-start text-left">
-                                                    <span className="text-sm sm:text-base font-semibold">{prof.full_name}</span>
-                                                    <span className="text-xs text-muted-foreground font-normal">{prof.email || "Sin email registrado"}</span>
-                                                </div>
-                                            </AccordionTrigger>
+                                            <div className="flex items-center justify-between w-full pr-2 hover:bg-blue-100/50 dark:hover:bg-blue-900/30 transition-colors">
+                                                <AccordionTrigger className="hover:no-underline px-3 flex-1 hover:bg-transparent">
+                                                    <div className="flex flex-col items-start text-left">
+                                                        <span className="text-sm sm:text-base font-semibold">{prof.full_name}</span>
+                                                        <span className="text-xs text-muted-foreground font-normal">{prof.email || "Sin email registrado"}</span>
+                                                    </div>
+                                                </AccordionTrigger>
+                                                {isAdmin && (
+                                                    <div className="flex-shrink-0 ml-2">
+                                                        <ProfessorActions professor={{ id: prof.id, full_name: prof.full_name, email: prof.email }} />
+                                                    </div>
+                                                )}
+                                            </div>
                                             <AccordionContent className="px-2">
                                                 <div className="grid gap-6 lg:grid-cols-2 pt-4">
                                                     {/* Lista de Horarios */}
@@ -169,9 +189,11 @@ export default async function ProfesoresPage() {
             </div>
 
             {/* Gráfico de Carga Horaria */}
-            {professors.length > 0 && (
-                <ProfessorWorkloadChart professors={professors} />
-            )}
-        </div>
+            {
+                professors.length > 0 && (
+                    <ProfessorWorkloadChart professors={professors} />
+                )
+            }
+        </div >
     );
 }

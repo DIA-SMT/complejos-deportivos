@@ -162,3 +162,66 @@ export async function deleteSchedule(scheduleId: string) {
     revalidatePath("/profesores");
     return { success: true };
 }
+
+export async function updateProfessor(formData: FormData) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
+    const supabase = await createClient();
+
+    const professorId = formData.get("professorId") as string;
+    const fullName = formData.get("fullName") as string;
+    const email = formData.get("email") as string;
+
+    if (!professorId || !fullName) {
+        return { error: "El ID y nombre son requeridos" };
+    }
+
+    const { error } = await supabase
+        .from("professors")
+        .update({
+            full_name: fullName,
+            email: email || null,
+        } as any)
+        .eq("id", professorId);
+
+    if (error) {
+        console.error("Error updating professor:", error);
+        return { error: "Error al actualizar profesor" };
+    }
+
+    revalidatePath("/profesores");
+    return { success: true };
+}
+
+export async function deleteProfessor(professorId: string) {
+    // Verificar que el usuario sea admin
+    await requireAdmin();
+
+    const supabase = await createClient();
+
+    // First, delete all schedules associated with this professor
+    const { error: schedulesError } = await supabase
+        .from("professor_schedules")
+        .delete()
+        .eq("professor_id", professorId);
+
+    if (schedulesError) {
+        console.error("Error deleting professor schedules:", schedulesError);
+        return { error: "Error al eliminar horarios del profesor" };
+    }
+
+    // Then delete the professor
+    const { error } = await supabase
+        .from("professors")
+        .delete()
+        .eq("id", professorId);
+
+    if (error) {
+        console.error("Error deleting professor:", error);
+        return { error: "Error al eliminar profesor" };
+    }
+
+    revalidatePath("/profesores");
+    return { success: true };
+}

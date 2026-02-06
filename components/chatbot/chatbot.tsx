@@ -89,13 +89,27 @@ export function Chatbot() {
         <>
             {/* Botón flotante */}
             {!isOpen && (
-                <Button
-                    onClick={() => setIsOpen(true)}
-                    className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-12 w-12 md:h-14 md:w-14 rounded-full shadow-lg z-50"
-                    size="icon"
-                >
-                    <MessageCircle className="h-5 w-5 md:h-6 md:w-6" />
-                </Button>
+                <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-4">
+                    <div className="bg-white text-primary px-4 py-2 rounded-xl shadow-lg border animate-bounce-subtle hidden md:block relative">
+                        <span className="font-bold text-sm">¡Arranca la clase!</span>
+                        <div className="absolute top-1/2 -right-1 w-2 h-2 bg-white border-t border-r transform rotate-45 -translate-y-1/2"></div>
+                    </div>
+                    <Button
+                        onClick={() => setIsOpen(true)}
+                        className="h-16 w-16 md:h-20 md:w-20 rounded-full shadow-lg p-0 overflow-hidden border-2 border-white/20 hover:scale-110 transition-transform duration-300"
+                        size="icon"
+                    >
+                        <video
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full object-cover scale-110"
+                        >
+                            <source src="/videos/bot-option-b.mp4" type="video/mp4" />
+                        </video>
+                    </Button>
+                </div>
             )}
 
             {/* Chat Window */}

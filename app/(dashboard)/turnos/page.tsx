@@ -117,8 +117,21 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     })
 
     return (
-        <div className="h-[calc(100vh-6rem)] w-full">
-            <CalendarView currentDate={currentDate} shifts={formattedShifts} />
+        <div className="relative flex flex-col h-[calc(100vh-6rem)] w-full overflow-hidden">
+            {/* Background Image */}
+            <div className="absolute inset-0 z-0">
+                <img
+                    src="/images/turnos.png"
+                    alt="Fondo Turnos"
+                    className="w-full h-full object-cover opacity-15"
+                    style={{ objectFit: 'cover' }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/50 to-background/80"></div>
+            </div>
+
+            <div className="relative z-10 flex-1 h-full">
+                <CalendarView currentDate={currentDate} shifts={formattedShifts} />
+            </div>
         </div>
     )
 }

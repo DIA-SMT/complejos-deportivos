@@ -44,11 +44,11 @@ export function Sidebar({ className }: SidebarProps) {
                     {!isCollapsed && (
                         <>
                             <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-muted-foreground uppercase">
-                                COMPLEJO
+                                
                             </h2>
                             <h1 className="mb-6 px-4 text-xl font-bold tracking-tight">
-                                Complejo
-                                <span className="block text-sm font-normal text-muted-foreground">Gestión multi-sede</span>
+                                Menu  
+                                <span className="block text-sm font-normal text-muted-foreground">Gestión administrativa</span>
                             </h1>
                         </>
                     )}
