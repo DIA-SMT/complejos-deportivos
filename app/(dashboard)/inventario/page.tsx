@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/table";
 import { PlusCircle } from "lucide-react";
 
+import { EditInventoryDialog } from "@/components/inventory/edit-inventory-dialog";
+
 export default async function InventarioPage() {
     const inventory = (await getInventory()) as any[];
     const user = await getCurrentUser();
@@ -84,12 +86,13 @@ export default async function InventarioPage() {
                                     <TableHead>Nombre</TableHead>
                                     <TableHead className="hidden sm:table-cell">Descripción</TableHead>
                                     <TableHead className="text-right">Cantidad</TableHead>
+                                    {isAdmin && <TableHead className="text-right">Acciones</TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {inventory.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="h-24 text-center">
+                                        <TableCell colSpan={isAdmin ? 4 : 3} className="h-24 text-center">
                                             No hay items cargados.
                                         </TableCell>
                                     </TableRow>
@@ -106,6 +109,11 @@ export default async function InventarioPage() {
                                             </TableCell>
                                             <TableCell className="hidden sm:table-cell">{item.description || "-"}</TableCell>
                                             <TableCell className="text-right font-semibold">{item.quantity}</TableCell>
+                                            {isAdmin && (
+                                                <TableCell className="text-right">
+                                                    <EditInventoryDialog item={item} />
+                                                </TableCell>
+                                            )}
                                         </TableRow>
                                     ))
                                 )}

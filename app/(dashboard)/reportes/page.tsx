@@ -25,6 +25,9 @@ interface ReportesPageProps {
     searchParams: Promise<{ week?: string }>
 }
 
+import { GenerateReportDialog } from "@/components/reports/generate-report-dialog"
+import { CreateReportDialog } from "@/components/reports/create-report-dialog"
+
 export default async function ReportesPage({ searchParams }: ReportesPageProps) {
     const params = await searchParams
     const supabase = await createClient()
@@ -57,6 +60,15 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
         .gte("date", startIso)
         .lte("date", endIso)
         .order('date', { ascending: true })
+
+    // Fetch schedules for the filter dialog
+    const { data: schedules } = await supabase
+        .from("professor_schedules")
+        .select(`
+            id,
+            sport,
+            professors (full_name)
+        `)
 
     if (error) {
         console.error("Error fetching reports:", error)
@@ -137,8 +149,12 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                         </Button>
                     )}
                 </div>
-                <div className="text-sm text-muted-foreground">
-                    Total reportes: <span className="font-medium text-foreground">{reports?.length || 0}</span>
+                <div className="flex items-center gap-4">
+                    <div className="text-sm text-muted-foreground hidden sm:block">
+                        Total reportes: <span className="font-medium text-foreground">{reports?.length || 0}</span>
+                    </div>
+                    <CreateReportDialog schedules={schedules || []} />
+                    <GenerateReportDialog schedules={schedules || []} reports={reports || []} />
                 </div>
             </div>
 

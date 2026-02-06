@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils"
 import { logout } from "@/app/actions/auth"
 import { UserProfile } from "@/app/actions/auth"
 import { Badge } from "@/components/ui/badge"
+import { ModeToggle } from "@/components/mode-toggle"
 
 function DashboardContent({ children, user }: { children: React.ReactNode; user: UserProfile | null }) {
     const { isCollapsed, isMobileOpen, toggleMobileSidebar, setIsMobileOpen } = useSidebar()
@@ -74,6 +75,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                         <span className="text-xs md:text-sm font-medium">COMPLEJO DEPORTIVO LEDESMA </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
+                        <ModeToggle />
                         {user ? (
                             <>
                                 <Link href="/perfil">

@@ -21,7 +21,7 @@ export function DynamicCursor() {
     useEffect(() => {
         const interval = setInterval(() => {
             setCurrentBallIndex((prev) => (prev + 1) % BALLS.length)
-        }, 1000) // Change every 5 seconds
+        }, 1000) // Change every 1 segundo
 
         return () => clearInterval(interval)
     }, [])
