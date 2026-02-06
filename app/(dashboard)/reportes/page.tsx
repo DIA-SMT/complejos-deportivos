@@ -89,10 +89,22 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Reportes Semanales</h2>
-                    <p className="text-sm sm:text-base text-muted-foreground">
+            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+                <div className="absolute inset-0 bg-blue-900/20">
+                    <img
+                        src="/images/reportes.png"
+                        alt="Fondo Reportes"
+                        className="absolute inset-0 w-full h-full object-cover transform scale-110"
+                        style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/90 via-blue-900/60 to-transparent dark:from-black/90 dark:via-black/60 mix-blend-multiply"></div>
+                </div>
+
+                <div className="relative z-10 h-full flex flex-col justify-center px-6 sm:px-10 text-white space-y-2">
+                    <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight drop-shadow-md animate-slide-in-left">
+                        Reportes Semanales
+                    </h2>
+                    <p className="text-base sm:text-lg text-blue-100 max-w-2xl font-light drop-shadow animate-slide-in-left animation-delay-200">
                         Historial de reportes de clases, asistencia y observaciones.
                     </p>
                 </div>

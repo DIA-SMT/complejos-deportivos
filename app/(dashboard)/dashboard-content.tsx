@@ -71,7 +71,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                             )}
                         </Button>
                         {/* Placeholder for complex selector or breadcrumb */}
-                        <span className="text-xs md:text-sm font-medium">Seleccioná un complejo</span>
+                        <span className="text-xs md:text-sm font-medium">COMPLEJO DEPORTIVO LEDESMA </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
                         {user ? (

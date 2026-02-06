@@ -13,6 +13,8 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+import { DynamicCursor } from "@/components/ui/dynamic-cursor";
+
 export const metadata: Metadata = {
   title: "Complejos Deportivos",
   description: "Sistema de gestión de complejos deportivos",
@@ -31,6 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <DynamicCursor />
         {children}
         <Toaster position="top-right" richColors />
       </body>
