@@ -43,7 +43,7 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
     return (
         <div className="flex flex-col h-full overflow-hidden bg-background rounded-b-lg border-x border-b shadow-sm animate-fade-in">
             {/* Days Header */}
-            <div className="grid grid-cols-8 border-b bg-blue-600 text-primary-foreground">
+            <div className="grid grid-cols-[70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] border-b bg-blue-600 text-primary-foreground">
                 <div className="p-2 border-r text-center text-xs font-medium text-primary-foreground/80 flex items-center justify-center border-blue-500">
                     Hora
                 </div>
@@ -69,13 +69,13 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
             </div>
 
             {/* Calendar Body */}
-            <div className="flex-1 overflow-y-auto scrollbar-thin">
-                <div className="grid grid-cols-8 min-h-[960px] relative">
+            <div className="flex-1 overflow-y-auto scrollbar-thin relative">
+                <div className="grid grid-cols-[70px_1fr_1fr_1fr_1fr_1fr_1fr_1fr] min-h-[960px] relative z-10 pt-4">
                     {/* Time Column */}
-                    <div className="border-r bg-muted/10">
+                    <div className="border-r bg-blue-50/50 dark:bg-blue-900/10">
                         {hours.map((hour) => (
-                            <div key={hour} className="h-[60px] border-b text-xs text-muted-foreground relative transition-colors hover:bg-muted/20">
-                                <span className="absolute -top-3 right-2 bg-background px-1 font-medium text-[11px]">
+                            <div key={hour} className="h-[60px] border-b text-xs text-muted-foreground relative transition-colors hover:bg-blue-100/50 dark:hover:bg-blue-800/20">
+                                <span className="absolute -top-3 right-2 bg-blue-600 text-white px-1.5 py-0.5 rounded shadow-sm font-bold text-[10px] z-20">
                                     {`${hour.toString().padStart(2, '0')}:00`}
                                 </span>
                             </div>
