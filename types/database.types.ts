@@ -17,21 +17,42 @@ export type Database = {
             complexes: {
                 Row: {
                     address: string | null
+                    app_name: string | null
+                    assistant_name: string | null
                     created_at: string | null
+                    description: string | null
+                    footer_line_1: string | null
+                    footer_line_2: string | null
                     id: string
+                    logo_url: string | null
                     name: string
+                    updated_at: string | null
                 }
                 Insert: {
                     address?: string | null
+                    app_name?: string | null
+                    assistant_name?: string | null
                     created_at?: string | null
+                    description?: string | null
+                    footer_line_1?: string | null
+                    footer_line_2?: string | null
                     id?: string
+                    logo_url?: string | null
                     name: string
+                    updated_at?: string | null
                 }
                 Update: {
                     address?: string | null
+                    app_name?: string | null
+                    assistant_name?: string | null
                     created_at?: string | null
+                    description?: string | null
+                    footer_line_1?: string | null
+                    footer_line_2?: string | null
                     id?: string
+                    logo_url?: string | null
                     name?: string
+                    updated_at?: string | null
                 }
                 Relationships: []
             }
@@ -255,6 +276,24 @@ export type Database = {
                         referencedColumns: ["id"]
                     },
                 ]
+            }
+            sports: {
+                Row: {
+                    created_at: string
+                    id: string
+                    name: string
+                }
+                Insert: {
+                    created_at?: string
+                    id?: string
+                    name: string
+                }
+                Update: {
+                    created_at?: string
+                    id?: string
+                    name?: string
+                }
+                Relationships: []
             }
             user_profiles: {
                 Row: {

@@ -14,10 +14,11 @@ interface ScheduleItemProps {
     schedule: any;
     days: string[];
     sports: string[];
+    courts: { id: string; name: string }[];
     isAdmin?: boolean;
 }
 
-export function ScheduleItem({ schedule, days, sports, isAdmin = false }: ScheduleItemProps) {
+export function ScheduleItem({ schedule, days, sports, courts, isAdmin = false }: ScheduleItemProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
@@ -103,6 +104,21 @@ export function ScheduleItem({ schedule, days, sports, isAdmin = false }: Schedu
                             required
                         />
                     </div>
+                </div>
+
+                <div className="space-y-1">
+                    <Label htmlFor={`edit-court-${schedule.id}`} className="text-xs">Cancha / espacio</Label>
+                    <select
+                        id={`edit-court-${schedule.id}`}
+                        name="courtId"
+                        defaultValue={schedule.court_id || ""}
+                        className="flex h-8 w-full items-center justify-between rounded-md border border-input bg-background px-2 py-1 text-xs shadow-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    >
+                        <option value="">Sin asignar</option>
+                        {courts.map((court) => (
+                            <option key={court.id} value={court.id}>{court.name}</option>
+                        ))}
+                    </select>
                 </div>
 
                 <div className="space-y-1">

@@ -2,17 +2,20 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { useSidebar } from "@/components/sidebar-context"
+import type { ComplexBranding } from "@/lib/complex-config"
 
 interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     className?: string
+    branding: ComplexBranding
+    canManageSettings?: boolean
 }
 
-export function Sidebar({ className }: SidebarProps) {
+export function Sidebar({ className, branding, canManageSettings = false }: SidebarProps) {
     const { isCollapsed, toggleSidebar, setIsMobileOpen } = useSidebar()
 
     const handleLinkClick = () => {
@@ -47,8 +50,8 @@ export function Sidebar({ className }: SidebarProps) {
                                 
                             </h2>
                             <h1 className="mb-6 px-4 text-xl font-bold tracking-tight">
-                                Menu  
-                                <span className="block text-sm font-normal text-muted-foreground">Gestión administrativa</span>
+                                {branding.appName}
+                                <span className="block text-sm font-normal text-muted-foreground">{branding.displayName}</span>
                             </h1>
                         </>
                     )}
@@ -121,6 +124,21 @@ export function Sidebar({ className }: SidebarProps) {
                                 <span className={cn(isCollapsed && "md:hidden")}>Mi Perfil</span>
                             </Button>
                         </Link>
+                        {canManageSettings && (
+                            <Link href="/configuracion" onClick={handleLinkClick}>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full border-dashed",
+                                        isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                    )}
+                                    title={isCollapsed ? "Configuracion" : undefined}
+                                >
+                                    <Settings className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                    <span className={cn(isCollapsed && "md:hidden")}>Configuracion</span>
+                                </Button>
+                            </Link>
+                        )}
                     </div>
                 </div>
             </div>
@@ -130,16 +148,17 @@ export function Sidebar({ className }: SidebarProps) {
                 <div className="px-4 py-2 mt-auto text-xs text-muted-foreground text-center">
                     <div className="flex justify-center mb-4">
                         <Image
-                            src="/logoMuni-sm.png"
-                            alt="Logo Municipalidad San Miguel de Tucumán"
+                            src={branding.logoSrc}
+                            alt={branding.logoAlt}
                             width={150}
                             height={50}
                             className="h-auto w-auto object-contain max-h-16 opacity-80 hover:opacity-100 transition-opacity"
                         />
                     </div>
                     <p>© {new Date().getFullYear()}</p>
-                    <p>Desarrollado por la Dirección de Inteligencia Artificial</p>
-                    <p>Municipalidad de San Miguel de Tucumán</p>
+                    {branding.footerLines.map((line) => (
+                        <p key={line}>{line}</p>
+                    ))}
                 </div>
             )}
         </div>

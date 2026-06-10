@@ -10,8 +10,17 @@ import { logout } from "@/app/actions/auth"
 import { UserProfile } from "@/app/actions/auth"
 import { Badge } from "@/components/ui/badge"
 import { ModeToggle } from "@/components/mode-toggle"
+import type { ComplexBranding } from "@/lib/complex-config"
 
-function DashboardContent({ children, user }: { children: React.ReactNode; user: UserProfile | null }) {
+function DashboardContent({
+    children,
+    user,
+    branding,
+}: {
+    children: React.ReactNode
+    user: UserProfile | null
+    branding: ComplexBranding
+}) {
     const { isCollapsed, isMobileOpen, toggleMobileSidebar, setIsMobileOpen } = useSidebar()
 
     const handleLogout = async () => {
@@ -35,7 +44,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                     isCollapsed ? "w-16" : "w-64"
                 )}
             >
-                <Sidebar className="h-full" />
+                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
             </aside>
 
             {/* Sidebar - Mobile */}
@@ -45,7 +54,7 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                     isMobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
-                <Sidebar className="h-full" />
+                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
             </aside>
 
             {/* Main Content */}
@@ -71,8 +80,10 @@ function DashboardContent({ children, user }: { children: React.ReactNode; user:
                                 <Menu className="h-5 w-5" />
                             )}
                         </Button>
-                        {/* Placeholder for complex selector or breadcrumb */}
-                        <span className="text-xs md:text-sm font-medium">COMPLEJO DEPORTIVO LEDESMA </span>
+                        <div className="flex flex-col leading-tight">
+                            <span className="text-xs md:text-sm font-semibold uppercase">{branding.displayName}</span>
+                            <span className="hidden text-[11px] text-emerald-600 dark:text-emerald-400 md:inline">Modo SaaS configurable</span>
+                        </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
                         <ModeToggle />

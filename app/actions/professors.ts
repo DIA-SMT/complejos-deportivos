@@ -82,6 +82,7 @@ export async function addSchedule(formData: FormData) {
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
     const sport = formData.get("sport") as string;
+    const courtId = formData.get("courtId") as string;
     const description = formData.get("description") as string;
 
     if (!professorId || !dayOfWeek || !startTime || !endTime || !sport) {
@@ -94,6 +95,7 @@ export async function addSchedule(formData: FormData) {
         start_time: startTime,
         end_time: endTime,
         sport: sport,
+        court_id: courtId || null,
         description: description || null
     } as any);
 
@@ -117,6 +119,7 @@ export async function updateSchedule(formData: FormData) {
     const startTime = formData.get("startTime") as string;
     const endTime = formData.get("endTime") as string;
     const sport = formData.get("sport") as string;
+    const courtId = formData.get("courtId") as string;
     const description = formData.get("description") as string;
 
     if (!scheduleId || !dayOfWeek || !startTime || !endTime || !sport) {
@@ -130,6 +133,7 @@ export async function updateSchedule(formData: FormData) {
             start_time: startTime,
             end_time: endTime,
             sport: sport,
+            court_id: courtId || null,
             description: description || null
         } as any)
         .eq("id", scheduleId);

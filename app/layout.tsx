@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
+import { complexConfig } from "@/lib/complex-config";
+import { getComplexBranding } from "@/app/actions/complex-settings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -16,13 +18,17 @@ const geistMono = Geist_Mono({
 import { DynamicCursor } from "@/components/ui/dynamic-cursor";
 import { ThemeProvider } from "@/components/theme-provider";
 
-export const metadata: Metadata = {
-  title: "Complejos Deportivos",
-  description: "Sistema de gestión de complejos deportivos",
-  icons: {
-    icon: "/logoMuni-sm.png",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const branding = await getComplexBranding();
+
+  return {
+    title: branding.appName,
+    description: branding.description,
+    icons: {
+      icon: branding.logoSrc || complexConfig.logoSrc,
+    },
+  };
+}
 
 export default function RootLayout({
   children,
