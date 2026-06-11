@@ -1,5 +1,6 @@
 import { getProfessors } from "@/app/actions/professors";
 import { getCurrentUser } from "@/app/actions/auth";
+import { getCourts, getSports } from "@/app/actions/facilities";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Clock, Calendar, ClipboardList } from "lucide-react";
 import { Database } from "@/types/database.types";
@@ -24,13 +25,17 @@ import {
 import { ProfessorWorkloadChart } from "@/components/professor-workload-chart";
 
 export default async function ProfesoresPage() {
-    const professors = (await getProfessors()) as unknown as ProfessorWithSchedules[];
-    const user = await getCurrentUser();
+    const [professorsData, user, sportsData, courts] = await Promise.all([
+        getProfessors(),
+        getCurrentUser(),
+        getSports(),
+        getCourts(),
+    ]);
+    const professors = professorsData as unknown as ProfessorWithSchedules[];
     const isAdmin = user?.role === 'admin';
-    // Courts removed as per user request
 
     const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-    const sports = ["Fútbol", "Voley", "Basket", "Gimnasia", "Padel", "Natación"];
+    const sports = sportsData.map((sport) => sport.name);
 
     return (
         <div className="flex flex-col space-y-6">
@@ -117,6 +122,7 @@ export default async function ProfesoresPage() {
                                                                         schedule={schedule}
                                                                         days={days}
                                                                         sports={sports}
+                                                                        courts={courts}
                                                                         isAdmin={isAdmin}
                                                                     />
                                                                 ))}
@@ -136,6 +142,7 @@ export default async function ProfesoresPage() {
                                                                 professorId={prof.id}
                                                                 days={days}
                                                                 sports={sports}
+                                                                courts={courts}
                                                             />
                                                         </div>
                                                     )}

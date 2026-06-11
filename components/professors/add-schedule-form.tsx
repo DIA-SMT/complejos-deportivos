@@ -12,9 +12,10 @@ interface AddScheduleFormProps {
     professorId: string;
     days: string[];
     sports: string[];
+    courts: { id: string; name: string }[];
 }
 
-export function AddScheduleForm({ professorId, days, sports }: AddScheduleFormProps) {
+export function AddScheduleForm({ professorId, days, sports, courts }: AddScheduleFormProps) {
     const [startTime, setStartTime] = useState("");
     const [endTime, setEndTime] = useState("");
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -76,6 +77,20 @@ export function AddScheduleForm({ professorId, days, sports }: AddScheduleFormPr
                         {sports.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                 </div>
+            </div>
+
+            <div className="space-y-1">
+                <Label htmlFor={`court-${professorId}`} className="text-xs">Cancha / espacio</Label>
+                <select
+                    id={`court-${professorId}`}
+                    name="courtId"
+                    className="flex h-9 w-full items-center justify-between rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                    <option value="">Sin asignar</option>
+                    {courts.map((court) => (
+                        <option key={court.id} value={court.id}>{court.name}</option>
+                    ))}
+                </select>
             </div>
 
             <div className="grid grid-cols-2 gap-2">

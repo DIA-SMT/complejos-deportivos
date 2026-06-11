@@ -5,6 +5,7 @@ import { createClient } from "@/utils/supabase/server"
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, eachDayOfInterval } from "date-fns"
 import { es } from "date-fns/locale"
 import { CalendarView } from "@/components/turnos/calendar-view"
+import { getActiveComplexId } from "@/app/actions/complex-settings"
 
 interface TurnosPageProps {
     searchParams: Promise<{ week?: string }>
@@ -13,6 +14,7 @@ interface TurnosPageProps {
 export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     const params = await searchParams
     const supabase = await createClient()
+    const activeComplexId = await getActiveComplexId()
 
     // Default to current date or selected "week" (which acts as anchor date)
     const currentDate = params.week ? new Date(params.week + 'T00:00:00') : new Date()
@@ -27,7 +29,7 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     const endIso = calendarEnd.toISOString().split('T')[0]
 
     // Fetch shifts for the whole calendar range
-    const { data: shifts, error } = await supabase
+    const shiftsQuery = supabase
         .from("shifts")
         .select(`
           *,
@@ -37,17 +39,25 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
         .gte("date", startIso)
         .lte("date", endIso)
 
+    const { data: shifts, error } = activeComplexId
+        ? await shiftsQuery.eq("complex_id", activeComplexId)
+        : { data: [], error: null }
+
     if (error) {
         console.error("Error fetching shifts:", error)
     }
 
     // Fetch recurring professor schedules
-    const { data: recurringSchedules, error: scheduleError } = await supabase
+    const recurringSchedulesQuery = supabase
         .from("professor_schedules")
         .select(`
             *,
             professors (full_name)
         `)
+
+    const { data: recurringSchedules, error: scheduleError } = activeComplexId
+        ? await recurringSchedulesQuery.eq("complex_id", activeComplexId)
+        : { data: [], error: null }
 
     if (scheduleError) {
         console.error("Error fetching recurring schedules:", scheduleError)

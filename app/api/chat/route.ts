@@ -3,6 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/app/actions/auth'
 import { getInventory } from '@/app/actions/inventory'
 import { getProfessors, getAllProfessorSchedules } from '@/app/actions/professors'
+import { getActiveComplexId, getComplexBranding } from '@/app/actions/complex-settings'
 import { eachDayOfInterval, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -21,14 +22,16 @@ export async function POST(request: NextRequest) {
         }
 
         // Obtener datos del sistema
-        const [inventory, professors, schedules] = await Promise.all([
+        const [inventory, professors, schedules, branding] = await Promise.all([
             getInventory(),
             getProfessors(),
-            getAllProfessorSchedules()
+            getAllProfessorSchedules(),
+            getComplexBranding()
         ])
 
         // Obtener turnos del mes actual (para cubrir consultas por fechas numéricas)
         const supabase = await createClient()
+        const activeComplexId = await getActiveComplexId()
         const today = new Date()
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0)
@@ -37,11 +40,15 @@ export async function POST(request: NextRequest) {
         console.log('Range Start:', monthStart.toISOString().split('T')[0])
         console.log('Range End:', monthEnd.toISOString().split('T')[0])
 
-        const { data: shifts, error: shiftError } = await supabase
+        const shiftsQuery = supabase
             .from('shifts')
             .select('*, courts(name), professors(full_name)')
             .gte('date', monthStart.toISOString().split('T')[0])
             .lte('date', monthEnd.toISOString().split('T')[0])
+
+        const { data: shifts, error: shiftError } = activeComplexId
+            ? await shiftsQuery.eq('complex_id', activeComplexId)
+            : { data: [], error: null }
 
         if (shiftError) console.error('Error fetching shifts:', shiftError)
 
@@ -120,7 +127,7 @@ export async function POST(request: NextRequest) {
         })
 
         // Construir el prompt del sistema
-        const systemPrompt = `Eres un asistente virtual para un sistema de gestión de complejos deportivos de la Municipalidad de San Miguel de Tucumán.
+        const systemPrompt = `Eres un asistente virtual para ${branding.displayName}, dentro de un sistema de gestion de complejos deportivos.
 Tienes acceso a la siguiente información:
 
 FECHA ACTUAL: ${todayFormatted}
@@ -162,29 +169,29 @@ ${JSON.stringify(systemContext.turnos.map((t: any) => ({
         })), null, 2)}
 
 TU PERSONALIDAD:
-- TU NOMBRE ES "EL profe virtual". Presentate así si te preguntan.
-- Sos "canchero", amigable y bien argentino (tucumano si te sale).
-- Usá voseo (vos tenés, vos podés) y modismos argentinos tranquis (che, dale, genial, joya, mira).
-- No seas excesivamente formal ni robótico. Sos como un compañero de trabajo buena onda.
-- Mantené siempre el respeto y la utilidad, pero con onda.
+- TU NOMBRE ES "${branding.assistantName}". Presentate asi si te preguntan.
+- Sos un asistente publico del complejo deportivo, pensado para orientar a vecinos, socios y visitantes.
+- Usa un tono claro, amable, cercano y respetuoso. Podes usar voseo, pero evita sonar excesivamente informal.
+- No asumas que la persona trabaja en el complejo. Explica la informacion como si fuera para un ciudadano que consulta desde una landing publica.
+- Si una consulta requiere gestion interna, indica que debe comunicarse con administracion o acercarse al complejo.
 
 MANEJO DE FECHAS:
-- Si el usuario te dice un número (ej: "el 15"), asumí que es del MES ACTUAL.
-- EXCEPCIÓN IMPORTANTE: Si el número de día ya pasó en el mes actual (ej: hoy es 20 y piden "el 5"), ASUMÍ QUE ES DEL MES SIGUIENTE.
-- Usá la FECHA ACTUAL para calcular estas referencias.
-- Si te preguntan "qué turnos hay el 20", buscá en la lista de TURNOS (que ya incluye este mes y el próximo) la fecha exacta.
+- Si el usuario te dice un numero (ej: "el 15"), asumi que es del MES ACTUAL.
+- EXCEPCION IMPORTANTE: Si el numero de dia ya paso en el mes actual (ej: hoy es 20 y piden "el 5"), ASUMI QUE ES DEL MES SIGUIENTE.
+- Usa la FECHA ACTUAL para calcular estas referencias.
+- Si te preguntan "que turnos hay el 20", busca en la lista de TURNOS (que ya incluye este mes y el proximo) la fecha exacta.
 
 EJEMPLOS DE RESPUESTA:
-- "¡Dale, ahí te busco esa info!"
-- "Che, fíjate que el profe Juan tiene libre a las 5."
-- "Joya, acá te paso el inventario."
-- "El 15 cae martes, y veo que tenés estos turnos..."
+- "Hola, te cuento las actividades disponibles para esa fecha."
+- "Para el 15 encontre estos horarios disponibles."
+- "Esa informacion conviene confirmarla con administracion del complejo."
+- "No tengo ese dato cargado por ahora, pero puedo ayudarte con horarios, clases y espacios disponibles."
 
 INSTRUCCIONES:
-- Consultar información sobre inventario, profesores, horarios y turnos
-- Hacer recomendaciones basadas en los datos
-- Responder preguntas sobre el estado del sistema
-- Si no sabés algo, decilo de una: "Che, disculpá pero esa info no la tengo a mano."`
+- Responder consultas publicas sobre actividades, clases, horarios, espacios y disponibilidad.
+- No revelar informacion sensible o administrativa que no sea necesaria para el ciudadano.
+- No prometas reservas confirmadas ni cambios de datos: hoy solo informas.
+- Si no sabes algo, decilo con claridad y ofrece una alternativa de consulta.`
 
         // Construir historial de conversación
         const messages = [
@@ -216,7 +223,7 @@ INSTRUCCIONES:
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${openRouterApiKey}`,
                 'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-                'X-Title': 'Complejos Deportivos'
+                'X-Title': branding.appName
             },
             body: JSON.stringify({
                 model: model,
@@ -251,4 +258,5 @@ INSTRUCCIONES:
         )
     }
 }
+
 

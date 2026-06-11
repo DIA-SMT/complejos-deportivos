@@ -35,6 +35,8 @@ export async function middleware(request: NextRequest) {
 
     // Rutas públicas (login)
     const isLoginPage = request.nextUrl.pathname === '/login'
+    const publicRoutes = ['/', '/reservar']
+    const isPublicRoute = isLoginPage || publicRoutes.includes(request.nextUrl.pathname)
     
     // Si está en login y ya está autenticado, verificar que tenga perfil
     if (isLoginPage && user) {
@@ -52,13 +54,13 @@ export async function middleware(request: NextRequest) {
     }
 
     // Si no está en login y no está autenticado, redirigir a login
-    if (!isLoginPage && !user) {
+    if (!isPublicRoute && !user) {
         return NextResponse.redirect(new URL('/login', request.url))
     }
 
     // Si está autenticado pero no tiene perfil, el trigger debería crearlo automáticamente
     // Si no existe, redirigir a login (el usuario necesitará que se cree el perfil manualmente)
-    if (!isLoginPage && user) {
+    if (!isPublicRoute && user) {
         const { data: profile } = await supabase
             .from('user_profiles')
             .select('id')

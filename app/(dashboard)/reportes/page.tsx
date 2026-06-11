@@ -20,6 +20,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Calendar, ChevronLeft, ChevronRight, FileText } from "lucide-react"
+import { getActiveComplexId } from "@/app/actions/complex-settings"
 
 interface ReportesPageProps {
     searchParams: Promise<{ week?: string }>
@@ -31,6 +32,7 @@ import { CreateReportDialog } from "@/components/reports/create-report-dialog"
 export default async function ReportesPage({ searchParams }: ReportesPageProps) {
     const params = await searchParams
     const supabase = await createClient()
+    const activeComplexId = await getActiveComplexId()
 
     const today = new Date()
     const currentWeekStart = params.week ? parseISO(params.week) : startOfWeek(today, { weekStartsOn: 1 })
@@ -43,6 +45,21 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
 
     const startIso = weekStart.toISOString().split('T')[0]
     const endIso = weekEnd.toISOString().split('T')[0]
+
+    // Fetch schedules for the active complex
+    const schedulesQuery = supabase
+        .from("professor_schedules")
+        .select(`
+            id,
+            sport,
+            professors (full_name)
+        `)
+
+    const { data: schedules } = activeComplexId
+        ? await schedulesQuery.eq("complex_id", activeComplexId)
+        : { data: [] }
+
+    const scheduleIds = schedules?.map((schedule) => schedule.id) || []
 
     // Fetch reports with related info
     const { data: reports, error } = await supabase
@@ -57,18 +74,10 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                 courts (name)
             )
         `)
+        .in("schedule_id", scheduleIds.length ? scheduleIds : ["00000000-0000-0000-0000-000000000000"])
         .gte("date", startIso)
         .lte("date", endIso)
         .order('date', { ascending: true })
-
-    // Fetch schedules for the filter dialog
-    const { data: schedules } = await supabase
-        .from("professor_schedules")
-        .select(`
-            id,
-            sport,
-            professors (full_name)
-        `)
 
     if (error) {
         console.error("Error fetching reports:", error)

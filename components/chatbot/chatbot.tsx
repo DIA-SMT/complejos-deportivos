@@ -1,10 +1,11 @@
-"use client"
+﻿"use client"
 
 import { useState, useRef, useEffect } from "react"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { MessageCircle, X, Send, Bot, User } from "lucide-react"
+import { X, Send, Bot, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
@@ -18,7 +19,7 @@ export function Chatbot() {
     const [messages, setMessages] = useState<Message[]>([
         {
             role: 'assistant',
-            content: '¡Buenas! Soy El profe virtual ⚽. ¿Qué necesitás saber sobre el complejo? Estoy para darte una mano.'
+            content: 'Hola, soy Migue. Puedo ayudarte con informacion sobre clases, horarios, actividades y espacios del complejo.'
         }
     ])
     const [input, setInput] = useState("")
@@ -68,7 +69,7 @@ export function Chatbot() {
             setMessages(prev => [...prev, { role: 'assistant', content: data.message }])
         } catch (error) {
             console.error('Error:', error)
-            toast.error('Error al comunicarse con el asistente')
+            toast.error('Error al comunicarse con Migue')
             setMessages(prev => [...prev, {
                 role: 'assistant',
                 content: 'Lo siento, hubo un error al procesar tu mensaje. Por favor intenta nuevamente.'
@@ -87,39 +88,38 @@ export function Chatbot() {
 
     return (
         <>
-            {/* Botón flotante */}
             {!isOpen && (
                 <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-4">
-                    <div className="bg-white text-primary px-4 py-2 rounded-xl shadow-lg border animate-bounce-subtle hidden md:block relative">
-                        <span className="font-bold text-sm">¡Arranca la clase!</span>
-                        <div className="absolute top-1/2 -right-1 w-2 h-2 bg-white border-t border-r transform rotate-45 -translate-y-1/2"></div>
+                    <div className="bg-popover text-popover-foreground px-4 py-2 rounded-xl shadow-lg border border-border animate-bounce-subtle hidden md:block relative">
+                        <span className="font-bold text-sm">Necesitas ayuda?</span>
+                        <div className="absolute top-1/2 -right-1 w-2 h-2 bg-popover border-t border-r border-border transform rotate-45 -translate-y-1/2"></div>
                     </div>
                     <Button
                         onClick={() => setIsOpen(true)}
-                        className="h-16 w-16 md:h-20 md:w-20 rounded-full shadow-lg p-0 overflow-hidden border-2 border-white/20 hover:scale-110 transition-transform duration-300"
+                        className="h-20 w-20 md:h-24 md:w-24 rounded-full shadow-lg p-0 overflow-hidden border-2 border-white/20 bg-white hover:scale-110 transition-transform duration-300 dark:bg-slate-100"
                         size="icon"
                     >
-                        <video
-                            autoPlay
-                            loop
-                            muted
-                            playsInline
-                            className="w-full h-full object-cover scale-110"
-                        >
-                            <source src="/videos/bot-option-b.mp4" type="video/mp4" />
-                        </video>
+                        <div className="relative h-full w-full">
+                            <Image
+                                src="/images/migue-avatar.png"
+                                alt="Migue, asistente del complejo"
+                                fill
+                                sizes="96px"
+                                className="object-contain object-center p-1.5"
+                                priority
+                            />
+                        </div>
                     </Button>
                 </div>
             )}
 
-            {/* Chat Window */}
             {isOpen && (
                 <Card className="fixed bottom-4 right-4 md:bottom-6 md:right-6 w-[calc(100vw-2rem)] md:w-96 max-w-md h-[calc(100vh-8rem)] md:h-[600px] max-h-[600px] shadow-2xl z-50 flex flex-col">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3 border-b flex-shrink-0">
                         <CardTitle className="text-base md:text-lg flex items-center gap-2">
                             <Bot className="h-4 w-4 md:h-5 md:w-5" />
-                            <span className="hidden sm:inline">El profe online⚽</span>
-                            <span className="sm:hidden">El profe</span>
+                            <span className="hidden sm:inline">Migue, asistente del complejo</span>
+                            <span className="sm:hidden">Migue</span>
                         </CardTitle>
                         <Button
                             variant="ghost"
@@ -131,7 +131,6 @@ export function Chatbot() {
                         </Button>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col p-0 overflow-hidden min-h-0">
-                        {/* Messages */}
                         <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
                             {messages.map((message, index) => (
                                 <div
@@ -180,7 +179,6 @@ export function Chatbot() {
                             <div ref={messagesEndRef} />
                         </div>
 
-                        {/* Input */}
                         <div className="border-t p-3 md:p-4 flex-shrink-0">
                             <div className="flex gap-2">
                                 <Input
@@ -188,7 +186,7 @@ export function Chatbot() {
                                     value={input}
                                     onChange={(e) => setInput(e.target.value)}
                                     onKeyPress={handleKeyPress}
-                                    placeholder="Escribe tu pregunta..."
+                                    placeholder="Preguntale a Migue..."
                                     disabled={isLoading}
                                     className="flex-1 text-sm md:text-base"
                                 />
@@ -208,4 +206,3 @@ export function Chatbot() {
         </>
     )
 }
-
