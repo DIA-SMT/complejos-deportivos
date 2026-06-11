@@ -4,8 +4,15 @@
 CREATE TABLE IF NOT EXISTS public.sports (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     name TEXT NOT NULL UNIQUE,
+    icon_url TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );
+
+ALTER TABLE public.sports
+ADD COLUMN IF NOT EXISTS icon_url TEXT;
+
+ALTER TABLE public.courts
+ADD COLUMN IF NOT EXISTS icon_url TEXT;
 
 ALTER TABLE public.sports ENABLE ROW LEVEL SECURITY;
 
@@ -17,7 +24,7 @@ DROP POLICY IF EXISTS "sports_delete_policy" ON public.sports;
 CREATE POLICY "sports_select_policy"
 ON public.sports
 FOR SELECT
-USING (auth.uid() IS NOT NULL);
+USING (true);
 
 CREATE POLICY "sports_insert_policy"
 ON public.sports
@@ -83,7 +90,7 @@ DROP POLICY IF EXISTS "courts_delete_policy" ON public.courts;
 CREATE POLICY "courts_select_policy"
 ON public.courts
 FOR SELECT
-USING (auth.uid() IS NOT NULL);
+USING (true);
 
 CREATE POLICY "courts_insert_policy"
 ON public.courts

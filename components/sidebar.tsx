@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -58,6 +58,19 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
 
                     {/* Navigation Links */}
                     <div className="space-y-1">
+                        <Link href="/" onClick={handleLinkClick}>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "w-full",
+                                    isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                )}
+                                title={isCollapsed ? "Inicio" : undefined}
+                            >
+                                <Home className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                <span className={cn(isCollapsed && "md:hidden")}>Inicio</span>
+                            </Button>
+                        </Link>
                         <Link href="/profesores" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"

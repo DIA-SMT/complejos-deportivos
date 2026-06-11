@@ -2,9 +2,11 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { PlusCircle, Trash2 } from "lucide-react"
+import { Building2, ImageIcon, PlusCircle, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { createCourt, createSport, deleteCourt, deleteSport, type Court, type Sport } from "@/app/actions/facilities"
+import type { RegisteredComplex } from "@/app/actions/complex-settings"
+import { imageFileToCompactDataUrl } from "@/components/settings/image-file-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,10 +19,45 @@ import {
     TableRow,
 } from "@/components/ui/table"
 
-export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts: Court[] }) {
+export function FacilitiesSettings({
+    sports,
+    courts,
+    complexes,
+    selectedComplexId,
+}: {
+    sports: Sport[]
+    courts: Court[]
+    complexes: RegisteredComplex[]
+    selectedComplexId?: string | null
+}) {
     const router = useRouter()
     const [isSportSubmitting, setIsSportSubmitting] = useState(false)
     const [isCourtSubmitting, setIsCourtSubmitting] = useState(false)
+    const [sportIconPreview, setSportIconPreview] = useState("")
+    const [courtIconPreview, setCourtIconPreview] = useState("")
+
+    const readImageFile = async (
+        event: React.ChangeEvent<HTMLInputElement>,
+        setPreview: (value: string) => void
+    ) => {
+        const file = event.target.files?.[0]
+
+        if (!file) return
+
+        try {
+            const compactImage = await imageFileToCompactDataUrl(file, { maxSize: 256, quality: 0.78 })
+
+            if (compactImage.length > 500_000) {
+                toast.error("La imagen sigue siendo muy pesada. Proba con una referencia mas liviana.")
+                event.target.value = ""
+                return
+            }
+
+            setPreview(compactImage)
+        } catch {
+            toast.error("No pudimos procesar esa imagen.")
+        }
+    }
 
     const handleCreateSport = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -36,6 +73,7 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
 
         toast.success("Deporte creado correctamente")
         form.reset()
+        setSportIconPreview("")
         router.refresh()
     }
 
@@ -53,6 +91,7 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
 
         toast.success("Cancha creada correctamente")
         form.reset()
+        setCourtIconPreview("")
         router.refresh()
     }
 
@@ -94,6 +133,20 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
                         <Label htmlFor="sport-name">Nombre</Label>
                         <Input id="sport-name" name="name" placeholder="Ej: Tenis" required />
                     </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="sport-icon">Logo o referencia visual</Label>
+                        <Input
+                            id="sport-icon"
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => readImageFile(event, setSportIconPreview)}
+                        />
+                        <input type="hidden" name="iconUrl" value={sportIconPreview} />
+                        {sportIconPreview ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={sportIconPreview} alt="" className="h-12 w-12 rounded-md object-contain" />
+                        ) : null}
+                    </div>
                     <Button type="submit" disabled={isSportSubmitting}>
                         <PlusCircle className="h-4 w-4" />
                         {isSportSubmitting ? "Agregando..." : "Agregar deporte"}
@@ -104,6 +157,7 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-14">Logo</TableHead>
                                 <TableHead>Deporte</TableHead>
                                 <TableHead className="w-16 text-right">Accion</TableHead>
                             </TableRow>
@@ -111,13 +165,23 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
                         <TableBody>
                             {sports.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={2} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
                                         No hay deportes cargados.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 sports.map((sport) => (
                                     <TableRow key={sport.id}>
+                                        <TableCell>
+                                            {sport.icon_url ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={sport.icon_url} alt="" className="h-8 w-8 rounded-md object-contain" />
+                                            ) : (
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                                    <ImageIcon className="h-4 w-4" />
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="font-medium">{sport.name}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" onClick={() => handleDeleteSport(sport.id)}>
@@ -146,6 +210,36 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
                         <Label htmlFor="court-type">Tipo</Label>
                         <Input id="court-type" name="type" placeholder="Ej: Futbol 5, Pileta, Salon" />
                     </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="court-complex">Complejo</Label>
+                        <select
+                            id="court-complex"
+                            name="complexId"
+                            defaultValue={selectedComplexId || ""}
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        >
+                            <option value="" className="bg-background text-foreground">Sin complejo asociado</option>
+                            {complexes.map((complex) => (
+                                <option key={complex.id} value={complex.id} className="bg-background text-foreground">
+                                    {complex.name}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="court-icon">Logo o referencia visual</Label>
+                        <Input
+                            id="court-icon"
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) => readImageFile(event, setCourtIconPreview)}
+                        />
+                        <input type="hidden" name="iconUrl" value={courtIconPreview} />
+                        {courtIconPreview ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={courtIconPreview} alt="" className="h-12 w-12 rounded-md object-contain" />
+                        ) : null}
+                    </div>
                     <Button type="submit" disabled={isCourtSubmitting}>
                         <PlusCircle className="h-4 w-4" />
                         {isCourtSubmitting ? "Agregando..." : "Agregar cancha"}
@@ -156,23 +250,36 @@ export function FacilitiesSettings({ sports, courts }: { sports: Sport[]; courts
                     <Table>
                         <TableHeader>
                             <TableRow>
+                                <TableHead className="w-14">Logo</TableHead>
                                 <TableHead>Cancha / espacio</TableHead>
                                 <TableHead>Tipo</TableHead>
+                                <TableHead>Complejo</TableHead>
                                 <TableHead className="w-16 text-right">Accion</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {courts.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={3} className="text-center text-muted-foreground">
+                                    <TableCell colSpan={5} className="text-center text-muted-foreground">
                                         No hay canchas cargadas.
                                     </TableCell>
                                 </TableRow>
                             ) : (
                                 courts.map((court) => (
                                     <TableRow key={court.id}>
+                                        <TableCell>
+                                            {court.icon_url ? (
+                                                // eslint-disable-next-line @next/next/no-img-element
+                                                <img src={court.icon_url} alt="" className="h-8 w-8 rounded-md object-contain" />
+                                            ) : (
+                                                <div className="flex h-8 w-8 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                                                    <Building2 className="h-4 w-4" />
+                                                </div>
+                                            )}
+                                        </TableCell>
                                         <TableCell className="font-medium">{court.name}</TableCell>
                                         <TableCell>{court.type || "-"}</TableCell>
+                                        <TableCell>{court.complexes?.name || "-"}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" onClick={() => handleDeleteCourt(court.id)}>
                                                 <Trash2 className="h-4 w-4 text-destructive" />

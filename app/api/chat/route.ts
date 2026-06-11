@@ -3,7 +3,7 @@ import { createClient } from '@/utils/supabase/server'
 import { getCurrentUser } from '@/app/actions/auth'
 import { getInventory } from '@/app/actions/inventory'
 import { getProfessors, getAllProfessorSchedules } from '@/app/actions/professors'
-import { getComplexBranding } from '@/app/actions/complex-settings'
+import { getActiveComplexId, getComplexBranding } from '@/app/actions/complex-settings'
 import { eachDayOfInterval, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
@@ -31,6 +31,7 @@ export async function POST(request: NextRequest) {
 
         // Obtener turnos del mes actual (para cubrir consultas por fechas numéricas)
         const supabase = await createClient()
+        const activeComplexId = await getActiveComplexId()
         const today = new Date()
         const monthStart = new Date(today.getFullYear(), today.getMonth(), 1)
         const monthEnd = new Date(today.getFullYear(), today.getMonth() + 2, 0)
@@ -39,11 +40,15 @@ export async function POST(request: NextRequest) {
         console.log('Range Start:', monthStart.toISOString().split('T')[0])
         console.log('Range End:', monthEnd.toISOString().split('T')[0])
 
-        const { data: shifts, error: shiftError } = await supabase
+        const shiftsQuery = supabase
             .from('shifts')
             .select('*, courts(name), professors(full_name)')
             .gte('date', monthStart.toISOString().split('T')[0])
             .lte('date', monthEnd.toISOString().split('T')[0])
+
+        const { data: shifts, error: shiftError } = activeComplexId
+            ? await shiftsQuery.eq('complex_id', activeComplexId)
+            : { data: [], error: null }
 
         if (shiftError) console.error('Error fetching shifts:', shiftError)
 
