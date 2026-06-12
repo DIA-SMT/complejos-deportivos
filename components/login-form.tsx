@@ -36,7 +36,7 @@ export function LoginForm({ branding }: { branding: ComplexBranding }) {
             }
 
             if (data.user) {
-                router.push("/turnos")
+                router.push("/seleccionar-complejo")
                 router.refresh()
             }
         } catch {

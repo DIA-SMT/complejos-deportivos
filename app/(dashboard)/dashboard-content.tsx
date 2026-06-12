@@ -87,6 +87,11 @@ function DashboardContent({
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
                         <ModeToggle />
+                        <Link href="/seleccionar-complejo">
+                            <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                                Cambiar complejo
+                            </Button>
+                        </Link>
                         {user ? (
                             <>
                                 <Link href="/perfil">

@@ -11,14 +11,15 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { Calendar, Clock, User, Award, MapPin } from "lucide-react"
+import { Calendar, Clock, User, MapPin } from "lucide-react"
 import { getSportEmoji } from "@/lib/utils/sport-emojis"
 import { cn } from "@/lib/utils"
+import type { CalendarShift } from "./types"
 
 interface ShiftDetailDialogProps {
     isOpen: boolean
     onClose: () => void
-    shift: any // We can refine this type later if needed
+    shift: CalendarShift | null
 }
 
 export function ShiftDetailDialog({ isOpen, onClose, shift }: ShiftDetailDialogProps) {

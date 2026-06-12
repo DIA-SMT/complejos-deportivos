@@ -4,22 +4,22 @@ import { useState } from "react"
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, startOfWeek, endOfWeek, isSameMonth, isSameDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
-import { ChevronLeft, ChevronRight, Search, LayoutGrid, List, Calendar as CalendarIcon } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ShiftDetailDialog } from "./shift-detail-dialog"
-import { Input } from "@/components/ui/input"
 import { useRouter } from "next/navigation"
 import { getSportEmoji } from "@/lib/utils/sport-emojis"
+import type { CalendarShift } from "./types"
 
 interface MonthCalendarProps {
     currentDate: Date
-    shifts: any[]
+    shifts: CalendarShift[]
     headless?: boolean
 }
 
 export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCalendarProps) {
     const router = useRouter()
-    const [selectedShift, setSelectedShift] = useState<any>(null)
+    const [selectedShift, setSelectedShift] = useState<CalendarShift | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     // Calendar logic
@@ -38,7 +38,7 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
         router.push(`/turnos?week=${dateString}`)
     }
 
-    const handleShiftClick = (e: React.MouseEvent, shift: any) => {
+    const handleShiftClick = (e: React.MouseEvent, shift: CalendarShift) => {
         e.stopPropagation()
         setSelectedShift(shift)
         setIsDialogOpen(true)
@@ -82,9 +82,9 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
             <div className="grid grid-cols-7 auto-rows-fr bg-muted/20 flex-1">
                 {allDays.map((dayItem, index) => {
                     const dateKey = format(dayItem, 'yyyy-MM-dd')
-                    const dayShifts = shifts.filter((s: any) => s.date === dateKey)
+                    const dayShifts = shifts.filter((shift) => shift.date === dateKey)
                     // Sort shifts by time
-                    dayShifts.sort((a: any, b: any) => a.start_time.localeCompare(b.start_time))
+                    dayShifts.sort((a, b) => a.start_time.localeCompare(b.start_time))
 
                     const isCurrentMonth = isSameMonth(dayItem, monthStart)
                     const isToday = isSameDay(dayItem, new Date())
@@ -111,7 +111,7 @@ export function MonthCalendar({ currentDate, shifts, headless = false }: MonthCa
                             </div>
 
                             <div className="flex-1 overflow-y-auto space-y-1 scrollbar-none">
-                                {dayShifts.map((shift: any, shiftIndex: number) => (
+                                {dayShifts.map((shift, shiftIndex) => (
                                     <div
                                         key={shift.id}
                                         onClick={(e) => handleShiftClick(e, shift)}

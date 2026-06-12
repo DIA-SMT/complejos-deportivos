@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button"
 import { useRouter, useSearchParams } from "next/navigation"
 import { MonthCalendar } from "./month-calendar"
 import { WeekCalendar } from "./week-calendar"
+import type { CalendarShift } from "./types"
 
 interface CalendarViewProps {
     currentDate: Date
-    shifts: any[]
+    shifts: CalendarShift[]
 }
 
 export function CalendarView({ currentDate, shifts }: CalendarViewProps) {

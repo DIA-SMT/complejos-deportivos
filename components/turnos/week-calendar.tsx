@@ -1,19 +1,20 @@
 "use client"
 
 import { useState } from "react"
-import { format, addDays, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns"
+import { format, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from "date-fns"
 import { es } from "date-fns/locale"
 import { cn } from "@/lib/utils"
 import { ShiftDetailDialog } from "./shift-detail-dialog"
 import { getSportEmoji } from "@/lib/utils/sport-emojis"
+import type { CalendarShift } from "./types"
 
 interface WeekCalendarProps {
     currentDate: Date
-    shifts: any[]
+    shifts: CalendarShift[]
 }
 
 export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
-    const [selectedShift, setSelectedShift] = useState<any>(null)
+    const [selectedShift, setSelectedShift] = useState<CalendarShift | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
 
     const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 })
@@ -21,13 +22,13 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
     const days = eachDayOfInterval({ start: weekStart, end: weekEnd })
     const hours = Array.from({ length: 16 }, (_, i) => i + 8) // 08:00 to 23:00
 
-    const handleShiftClick = (e: React.MouseEvent, shift: any) => {
+    const handleShiftClick = (e: React.MouseEvent, shift: CalendarShift) => {
         e.stopPropagation()
         setSelectedShift(shift)
         setIsDialogOpen(true)
     }
 
-    const getShiftStyle = (shift: any) => {
+    const getShiftStyle = (shift: CalendarShift) => {
         const [startHour, startMinute] = shift.start_time.split(':').map(Number)
         const [endHour, endMinute] = shift.end_time.split(':').map(Number)
 
@@ -85,7 +86,7 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
                     {/* Days Columns */}
                     {days.map((day) => {
                         const dateKey = format(day, 'yyyy-MM-dd')
-                        const dayShifts = shifts.filter((s: any) => s.date === dateKey)
+                        const dayShifts = shifts.filter((shift) => shift.date === dateKey)
 
                         return (
                             <div key={dateKey} className="border-r last:border-r-0 relative border-b-0 transition-colors hover:bg-muted/10">
@@ -95,7 +96,7 @@ export function WeekCalendar({ currentDate, shifts }: WeekCalendarProps) {
                                 ))}
 
                                 {/* Events */}
-                                {dayShifts.map((shift: any, shiftIndex: number) => (
+                                {dayShifts.map((shift, shiftIndex) => (
                                     <div
                                         key={shift.id}
                                         onClick={(e) => handleShiftClick(e, shift)}

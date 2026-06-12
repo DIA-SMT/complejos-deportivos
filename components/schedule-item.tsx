@@ -6,12 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Clock, MapPin, FileText, Pencil, Trash2, X, Check } from "lucide-react";
+import { MapPin, FileText, Pencil, Trash2, X, Check } from "lucide-react";
 import { toast } from "sonner";
+import type { Tables } from "@/types/database.types";
+
+type ScheduleWithCourt = Tables<"professor_schedules"> & {
+    courts?: { name: string } | null
+}
 
 interface ScheduleItemProps {
-    schedule: any;
+    schedule: ScheduleWithCourt;
     days: string[];
     sports: string[];
     courts: { id: string; name: string }[];

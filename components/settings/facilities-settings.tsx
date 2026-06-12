@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation"
 import { Building2, ImageIcon, PlusCircle, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 import { createCourt, createSport, deleteCourt, deleteSport, type Court, type Sport } from "@/app/actions/facilities"
-import type { RegisteredComplex } from "@/app/actions/complex-settings"
 import { imageFileToCompactDataUrl } from "@/components/settings/image-file-utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -22,17 +21,16 @@ import {
 export function FacilitiesSettings({
     sports,
     courts,
-    complexes,
     selectedComplexId,
 }: {
     sports: Sport[]
     courts: Court[]
-    complexes: RegisteredComplex[]
     selectedComplexId?: string | null
 }) {
     const router = useRouter()
     const [isSportSubmitting, setIsSportSubmitting] = useState(false)
     const [isCourtSubmitting, setIsCourtSubmitting] = useState(false)
+    const [formError, setFormError] = useState("")
     const [sportIconPreview, setSportIconPreview] = useState("")
     const [courtIconPreview, setCourtIconPreview] = useState("")
 
@@ -61,12 +59,15 @@ export function FacilitiesSettings({
 
     const handleCreateSport = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        setFormError("")
         setIsSportSubmitting(true)
+
         const form = event.currentTarget
         const result = await createSport(new FormData(form))
         setIsSportSubmitting(false)
 
         if (result?.error) {
+            setFormError(result.error)
             toast.error(result.error)
             return
         }
@@ -79,12 +80,15 @@ export function FacilitiesSettings({
 
     const handleCreateCourt = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
+        setFormError("")
         setIsCourtSubmitting(true)
+
         const form = event.currentTarget
         const result = await createCourt(new FormData(form))
         setIsCourtSubmitting(false)
 
         if (result?.error) {
+            setFormError(result.error)
             toast.error(result.error)
             return
         }
@@ -123,6 +127,12 @@ export function FacilitiesSettings({
 
     return (
         <div className="grid gap-8 lg:grid-cols-2">
+            {formError ? (
+                <div className="rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive lg:col-span-2">
+                    {formError}
+                </div>
+            ) : null}
+
             <section className="grid gap-4">
                 <form onSubmit={handleCreateSport} className="grid gap-3 rounded-lg border bg-muted/20 p-4">
                     <div>
@@ -133,6 +143,7 @@ export function FacilitiesSettings({
                         <Label htmlFor="sport-name">Nombre</Label>
                         <Input id="sport-name" name="name" placeholder="Ej: Tenis" required />
                     </div>
+                    <input type="hidden" name="complexId" value={selectedComplexId || ""} />
                     <div className="grid gap-2">
                         <Label htmlFor="sport-icon">Logo o referencia visual</Label>
                         <Input
@@ -210,22 +221,7 @@ export function FacilitiesSettings({
                         <Label htmlFor="court-type">Tipo</Label>
                         <Input id="court-type" name="type" placeholder="Ej: Futbol 5, Pileta, Salon" />
                     </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="court-complex">Complejo</Label>
-                        <select
-                            id="court-complex"
-                            name="complexId"
-                            defaultValue={selectedComplexId || ""}
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                        >
-                            <option value="" className="bg-background text-foreground">Sin complejo asociado</option>
-                            {complexes.map((complex) => (
-                                <option key={complex.id} value={complex.id} className="bg-background text-foreground">
-                                    {complex.name}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                    <input type="hidden" name="complexId" value={selectedComplexId || ""} />
                     <div className="grid gap-2">
                         <Label htmlFor="court-icon">Logo o referencia visual</Label>
                         <Input

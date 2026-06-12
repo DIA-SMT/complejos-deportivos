@@ -7,6 +7,30 @@ import { getActiveComplexId, getComplexBranding } from '@/app/actions/complex-se
 import { eachDayOfInterval, format } from 'date-fns'
 import { es } from 'date-fns/locale'
 
+type ChatSchedule = {
+    id: string
+    day_of_week: string
+    start_time: string
+    end_time: string
+    sport: string
+    professors?: { full_name: string } | null
+    professor_schedules?: ChatSchedule[]
+    specialty?: string | null
+    full_name?: string
+    email?: string | null
+}
+
+type ChatShift = {
+    id: string
+    date: string
+    start_time: string
+    end_time: string
+    court_name: string
+    professor_name: string
+    status: string
+    type: "real" | "virtual"
+}
+
 export async function POST(request: NextRequest) {
     try {
         // Verificar autenticación
@@ -55,10 +79,10 @@ export async function POST(request: NextRequest) {
         // Combinar turnos reales con horarios recurrentes ("virtual shifts")
         // Lógica replicada de app/(dashboard)/turnos/page.tsx
         const allDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
-        const formattedShifts: any[] = []
+        const formattedShifts: ChatShift[] = []
 
         // 1. Agregar turnos reales de la base de datos
-        shifts?.forEach((shift: any) => {
+        shifts?.forEach((shift) => {
             formattedShifts.push({
                 id: shift.id,
                 date: shift.date,
@@ -66,7 +90,7 @@ export async function POST(request: NextRequest) {
                 end_time: shift.end_time,
                 court_name: shift.courts?.name || "Sin cancha",
                 professor_name: shift.professors?.full_name || "Sin profesor",
-                status: shift.status,
+                status: shift.status || "scheduled",
                 type: 'real' // Marker for debug/clarity
             })
         })
@@ -78,7 +102,7 @@ export async function POST(request: NextRequest) {
             // Normalizar nombre del día (ej: "lunes" -> "Lunes")
             const normalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
 
-            schedules?.forEach((schedule: any) => {
+            schedules?.forEach((schedule) => {
                 if (schedule.day_of_week === normalizedDayName) {
                     // Verificar si ya existe un turno real para este horario (para no duplicar)
                     // Nota: Esta verificación es simple; en un sistema ideal chequearíamos solapamientos exactos.
@@ -107,6 +131,9 @@ export async function POST(request: NextRequest) {
         })
 
         // Preparar contexto del sistema
+        const typedProfessors = (professors || []) as unknown as ChatSchedule[]
+        const typedSchedules = (schedules || []) as unknown as ChatSchedule[]
+
         const systemContext = {
             inventario: inventory || [],
             profesores: professors || [],
@@ -136,11 +163,11 @@ INVENTARIO:
 ${JSON.stringify(systemContext.inventario, null, 2)}
 
 PROFESORES:
-${JSON.stringify(systemContext.profesores.map((p: any) => ({
+${JSON.stringify(typedProfessors.map((p) => ({
             nombre: p.full_name,
             email: p.email,
             especialidad: p.specialty,
-            horarios: p.professor_schedules?.map((s: any) => ({
+            horarios: p.professor_schedules?.map((s) => ({
                 dia: s.day_of_week,
                 hora_inicio: s.start_time,
                 hora_fin: s.end_time,
@@ -149,7 +176,7 @@ ${JSON.stringify(systemContext.profesores.map((p: any) => ({
         })), null, 2)}
 
 HORARIOS DE PROFESORES:
-${JSON.stringify(systemContext.horarios.map((s: any) => ({
+${JSON.stringify(typedSchedules.map((s) => ({
             profesor: s.professors?.full_name,
             dia: s.day_of_week,
             hora_inicio: s.start_time,
@@ -158,7 +185,7 @@ ${JSON.stringify(systemContext.horarios.map((s: any) => ({
         })), null, 2)}
 
 TURNOS (Mes actual y siguiente - Incluye clases regulares):
-${JSON.stringify(systemContext.turnos.map((t: any) => ({
+${JSON.stringify(systemContext.turnos.map((t) => ({
             fecha: t.date,
             hora_inicio: t.start_time,
             hora_fin: t.end_time,

@@ -1,9 +1,13 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
+import { cookies } from "next/headers"
+import { redirect } from "next/navigation"
 import { requireAdmin } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
 import { createComplexBranding, complexConfig, newComplexBranding } from "@/lib/complex-config"
+
+const ACTIVE_COMPLEX_COOKIE = "activeComplexId"
 
 export type RegisteredComplex = {
     id: string
@@ -19,13 +23,15 @@ export type RegisteredComplex = {
 
 export async function getComplexBranding(complexId?: string | null) {
     const supabase = await createClient()
+    const cookieStore = await cookies()
+    const activeComplexId = complexId ?? cookieStore.get(ACTIVE_COMPLEX_COOKIE)?.value ?? null
 
     let query = supabase
         .from("complexes")
         .select("*")
 
-    query = complexId
-        ? query.eq("id", complexId)
+    query = activeComplexId
+        ? query.eq("id", activeComplexId)
         : query.order("created_at", { ascending: true }).limit(1)
 
     const { data, error } = await query
@@ -60,6 +66,13 @@ export async function getRegisteredComplexes(): Promise<RegisteredComplex[]> {
 }
 
 export async function getActiveComplexId(): Promise<string | null> {
+    const cookieStore = await cookies()
+    const selectedComplexId = cookieStore.get(ACTIVE_COMPLEX_COOKIE)?.value
+
+    if (selectedComplexId) {
+        return selectedComplexId
+    }
+
     const supabase = await createClient()
 
     const { data, error } = await supabase
@@ -75,6 +88,53 @@ export async function getActiveComplexId(): Promise<string | null> {
     }
 
     return data?.id || null
+}
+
+export async function setActiveComplex(formData: FormData) {
+    await requireAdmin()
+
+    const complexId = (formData.get("complexId") as string | null)?.trim()
+
+    if (!complexId) {
+        return { error: "Selecciona un complejo." }
+    }
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("complexes")
+        .select("id")
+        .eq("id", complexId)
+        .maybeSingle()
+
+    if (error || !data) {
+        return { error: "El complejo seleccionado no existe." }
+    }
+
+    const cookieStore = await cookies()
+    cookieStore.set(ACTIVE_COMPLEX_COOKIE, complexId, {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+    })
+
+    revalidatePath("/")
+    revalidatePath("/turnos")
+    revalidatePath("/profesores")
+    revalidatePath("/inventario")
+    revalidatePath("/reportes")
+    revalidatePath("/configuracion")
+
+    return { success: true }
+}
+
+export async function selectActiveComplexAndRedirect(formData: FormData) {
+    const result = await setActiveComplex(formData)
+
+    if (result?.error) {
+        redirect(`/seleccionar-complejo?error=${encodeURIComponent(result.error)}`)
+    }
+
+    redirect("/turnos")
 }
 
 export async function updateComplexBranding(formData: FormData) {
@@ -93,8 +153,28 @@ export async function updateComplexBranding(formData: FormData) {
     const footerLine1 = (formData.get("footerLine1") as string | null)?.trim()
     const footerLine2 = (formData.get("footerLine2") as string | null)?.trim()
 
-    if (!complexName || !logoSrc || !description) {
-        return { error: "Completa nombre del complejo, logo y descripcion." }
+    if (!complexName || !logoSrc || !description || !address || !latitude || !longitude || !mapMarkerIcon || !footerLine1 || !footerLine2) {
+        return { error: "Completa todos los campos del complejo antes de guardar." }
+    }
+
+    let duplicateQuery = supabase
+        .from("complexes")
+        .select("id")
+        .ilike("name", complexName)
+
+    if (id) {
+        duplicateQuery = duplicateQuery.neq("id", id)
+    }
+
+    const { data: duplicateComplex, error: duplicateError } = await duplicateQuery.maybeSingle()
+
+    if (duplicateError) {
+        console.error("Error checking duplicate complex:", duplicateError)
+        return { error: "No se pudo validar si el complejo ya existe." }
+    }
+
+    if (duplicateComplex) {
+        return { error: "Ya existe un complejo con ese nombre." }
     }
 
     const payload = {
@@ -112,14 +192,23 @@ export async function updateComplexBranding(formData: FormData) {
     }
 
     const result = id
-        ? await supabase.from("complexes").update(payload as any).eq("id", id).select("id").maybeSingle()
-        : await supabase.from("complexes").insert(payload as any).select("id").maybeSingle()
+        ? await supabase.from("complexes").update(payload).eq("id", id).select("id").maybeSingle()
+        : await supabase.from("complexes").insert(payload).select("id").maybeSingle()
 
     if (result.error) {
         console.error("Error updating complex branding:", result.error)
         return {
             error: "No se pudo guardar la configuracion. Verifica que la migracion de branding este aplicada en Supabase.",
         }
+    }
+
+    if (result.data?.id) {
+        const cookieStore = await cookies()
+        cookieStore.set(ACTIVE_COMPLEX_COOKIE, result.data.id, {
+            path: "/",
+            sameSite: "lax",
+            httpOnly: true,
+        })
     }
 
     revalidatePath("/")

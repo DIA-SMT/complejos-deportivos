@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Database } from "@/types/database.types";
 import { BarChart3, ChevronLeft, ChevronRight } from "lucide-react";
 import { startOfWeek, endOfWeek, format, addWeeks, subWeeks } from "date-fns";
-import { es } from "date-fns/locale";
 
 type ProfessorWithSchedules = Database['public']['Tables']['professors']['Row'] & {
     professor_schedules: Database['public']['Tables']['professor_schedules']['Row'][]

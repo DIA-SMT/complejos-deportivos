@@ -48,7 +48,7 @@ export async function middleware(request: NextRequest) {
             .single()
         
         if (profile) {
-            return NextResponse.redirect(new URL('/turnos', request.url))
+            return NextResponse.redirect(new URL('/seleccionar-complejo', request.url))
         }
         // Si no tiene perfil, permitir quedarse en login para que se cree
     }

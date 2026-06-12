@@ -14,9 +14,10 @@ import {
 import { PlusCircle } from "lucide-react";
 
 import { EditInventoryDialog } from "@/components/inventory/edit-inventory-dialog";
+import type { Tables } from "@/types/database.types";
 
 export default async function InventarioPage() {
-    const inventory = (await getInventory()) as any[];
+    const inventory = (await getInventory()) as Tables<"inventory">[];
     const user = await getCurrentUser();
     const isAdmin = user?.role === 'admin';
 

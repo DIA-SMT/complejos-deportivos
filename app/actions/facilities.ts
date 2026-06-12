@@ -42,7 +42,10 @@ export async function getSports(): Promise<Sport[]> {
         }))
     }
 
-    return (data || []) as Sport[]
+    return (data || []).map((sport) => ({
+        ...sport,
+        icon_url: "icon_url" in sport ? sport.icon_url : null,
+    })) as Sport[]
 }
 
 export async function getCourts(options?: { includeAll?: boolean; complexId?: string | null }): Promise<Court[]> {
@@ -55,7 +58,7 @@ export async function getCourts(options?: { includeAll?: boolean; complexId?: st
         .order("name", { ascending: true })
 
     if (selectedComplexId) {
-        query = query.or(`complex_id.eq.${selectedComplexId},complex_id.is.null`)
+        query = query.eq("complex_id", selectedComplexId)
     }
 
     const { data, error } = await query
@@ -65,7 +68,10 @@ export async function getCourts(options?: { includeAll?: boolean; complexId?: st
         return []
     }
 
-    return data || []
+    return (data || []).map((court) => ({
+        ...court,
+        icon_url: "icon_url" in court ? court.icon_url : null,
+    })) as Court[]
 }
 
 export async function createSport(formData: FormData) {
@@ -79,12 +85,23 @@ export async function createSport(formData: FormData) {
     }
 
     const supabase = await createClient()
-    const activeComplexId = await getActiveComplexId()
-    const { error } = await supabase.from("sports").insert({ name, icon_url: iconUrl || null } as any)
+    const { error } = await supabase.from("sports").insert({ name, icon_url: iconUrl || null })
+
+    if (error?.message.includes("Could not find the 'icon_url' column")) {
+        const { error: retryError } = await supabase.from("sports").insert({ name })
+
+        if (retryError) {
+            console.error("Error creating sport without icon:", retryError)
+            return { error: `No se pudo crear el deporte: ${retryError.message}` }
+        }
+
+        revalidateFacilities()
+        return { success: true }
+    }
 
     if (error) {
         console.error("Error creating sport:", error)
-        return { error: "No se pudo crear el deporte. Verifica que la migracion de deportes este aplicada." }
+        return { error: `No se pudo crear el deporte: ${error.message}` }
     }
 
     revalidateFacilities()
@@ -120,16 +137,38 @@ export async function createCourt(formData: FormData) {
 
     const supabase = await createClient()
     const activeComplexId = await getActiveComplexId()
+    const selectedComplexId = complexId || activeComplexId
+
+    if (!selectedComplexId) {
+        return { error: "Selecciona un complejo antes de cargar una cancha." }
+    }
+
     const { error } = await supabase.from("courts").insert({
         name,
         type: type || null,
-        complex_id: complexId || activeComplexId,
+        complex_id: selectedComplexId,
         icon_url: iconUrl || null,
-    } as any)
+    })
+
+    if (error?.message.includes("Could not find the 'icon_url' column")) {
+        const { error: retryError } = await supabase.from("courts").insert({
+            name,
+            type: type || null,
+            complex_id: selectedComplexId,
+        })
+
+        if (retryError) {
+            console.error("Error creating court without icon:", retryError)
+            return { error: `No se pudo crear la cancha: ${retryError.message}` }
+        }
+
+        revalidateFacilities()
+        return { success: true }
+    }
 
     if (error) {
         console.error("Error creating court:", error)
-        return { error: "No se pudo crear la cancha" }
+        return { error: `No se pudo crear la cancha: ${error.message}` }
     }
 
     revalidateFacilities()

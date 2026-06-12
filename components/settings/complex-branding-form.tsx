@@ -133,6 +133,7 @@ export function ComplexBrandingForm({ branding }: { branding: ComplexBranding })
                             value={addressPreview}
                             placeholder="Ej: Av. Principal 123, San Miguel de Tucuman"
                             onChange={(event) => setAddressPreview(event.target.value)}
+                            required
                         />
                         <input type="hidden" name="latitude" value={latitude ?? ""} />
                         <input type="hidden" name="longitude" value={longitude ?? ""} />
@@ -218,6 +219,7 @@ export function ComplexBrandingForm({ branding }: { branding: ComplexBranding })
                         name="footerLine1"
                         defaultValue={branding.footerLines[0] || ""}
                         placeholder="Ej: Desarrollado por..."
+                        required
                     />
                 </div>
                 <div className="grid gap-2">
@@ -227,6 +229,7 @@ export function ComplexBrandingForm({ branding }: { branding: ComplexBranding })
                         name="footerLine2"
                         defaultValue={branding.footerLines[1] || ""}
                         placeholder="Ej: Nombre de la organizacion"
+                        required
                     />
                 </div>
             </div>

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { complexConfig } from "@/lib/complex-config";
-import { getComplexBranding } from "@/app/actions/complex-settings";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,13 +18,11 @@ import { DynamicCursor } from "@/components/ui/dynamic-cursor";
 import { ThemeProvider } from "@/components/theme-provider";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const branding = await getComplexBranding();
-
   return {
-    title: branding.appName,
-    description: branding.description,
+    title: complexConfig.appName,
+    description: "Sistema publico de reservas para complejos deportivos",
     icons: {
-      icon: branding.logoSrc || complexConfig.logoSrc,
+      icon: complexConfig.logoSrc,
     },
   };
 }

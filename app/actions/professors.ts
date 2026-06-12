@@ -81,7 +81,7 @@ export async function createProfessor(formData: FormData) {
         full_name: fullName,
         email: email || null,
         complex_id: activeComplexId,
-    } as any)
+    })
 
     if (error) {
         console.error("Error creating professor:", error)
@@ -122,7 +122,7 @@ export async function addSchedule(formData: FormData) {
         court_id: courtId || null,
         description: description || null,
         complex_id: activeComplexId,
-    } as any)
+    })
 
     if (error) {
         console.error("Error adding schedule:", error)
@@ -163,7 +163,7 @@ export async function updateSchedule(formData: FormData) {
             sport,
             court_id: courtId || null,
             description: description || null,
-        } as any)
+        })
         .eq("id", scheduleId)
         .eq("complex_id", activeComplexId)
 
@@ -223,7 +223,7 @@ export async function updateProfessor(formData: FormData) {
         .update({
             full_name: fullName,
             email: email || null,
-        } as any)
+        })
         .eq("id", professorId)
         .eq("complex_id", activeComplexId)
 
