@@ -195,6 +195,178 @@ export type Database = {
                     },
                 ]
             }
+            member_credentials: {
+                Row: {
+                    code: string
+                    complex_id: string
+                    created_at: string
+                    enabled_activities: string[]
+                    expires_at: string
+                    id: string
+                    issued_at: string
+                    member_id: string
+                    membership_type: string
+                    status: string
+                    updated_at: string
+                }
+                Insert: {
+                    code: string
+                    complex_id: string
+                    created_at?: string
+                    enabled_activities?: string[]
+                    expires_at: string
+                    id?: string
+                    issued_at?: string
+                    member_id: string
+                    membership_type?: string
+                    status?: string
+                    updated_at?: string
+                }
+                Update: {
+                    code?: string
+                    complex_id?: string
+                    created_at?: string
+                    enabled_activities?: string[]
+                    expires_at?: string
+                    id?: string
+                    issued_at?: string
+                    member_id?: string
+                    membership_type?: string
+                    status?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "member_credentials_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "member_credentials_member_id_fkey"
+                        columns: ["member_id"]
+                        isOneToOne: false
+                        referencedRelation: "members"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            members: {
+                Row: {
+                    complex_id: string
+                    created_at: string
+                    dni: string
+                    email: string | null
+                    first_name: string
+                    id: string
+                    last_name: string
+                    notes: string | null
+                    phone: string | null
+                    photo_url: string | null
+                    status: string
+                    updated_at: string
+                    user_id: string | null
+                }
+                Insert: {
+                    complex_id: string
+                    created_at?: string
+                    dni: string
+                    email?: string | null
+                    first_name: string
+                    id?: string
+                    last_name: string
+                    notes?: string | null
+                    phone?: string | null
+                    photo_url?: string | null
+                    status?: string
+                    updated_at?: string
+                    user_id?: string | null
+                }
+                Update: {
+                    complex_id?: string
+                    created_at?: string
+                    dni?: string
+                    email?: string | null
+                    first_name?: string
+                    id?: string
+                    last_name?: string
+                    notes?: string | null
+                    phone?: string | null
+                    photo_url?: string | null
+                    status?: string
+                    updated_at?: string
+                    user_id?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "members_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            membership_requests: {
+                Row: {
+                    complex_id: string
+                    created_at: string
+                    dni: string
+                    email: string
+                    first_name: string
+                    id: string
+                    last_name: string
+                    notes: string | null
+                    phone: string | null
+                    requested_activities: string[]
+                    requested_membership_type: string
+                    status: string
+                    updated_at: string
+                    user_id: string
+                }
+                Insert: {
+                    complex_id: string
+                    created_at?: string
+                    dni: string
+                    email: string
+                    first_name: string
+                    id?: string
+                    last_name: string
+                    notes?: string | null
+                    phone?: string | null
+                    requested_activities?: string[]
+                    requested_membership_type?: string
+                    status?: string
+                    updated_at?: string
+                    user_id: string
+                }
+                Update: {
+                    complex_id?: string
+                    created_at?: string
+                    dni?: string
+                    email?: string
+                    first_name?: string
+                    id?: string
+                    last_name?: string
+                    notes?: string | null
+                    phone?: string | null
+                    requested_activities?: string[]
+                    requested_membership_type?: string
+                    status?: string
+                    updated_at?: string
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "membership_requests_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
             professor_schedules: {
                 Row: {
                     complex_id: string | null
@@ -469,7 +641,20 @@ export type Database = {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            create_public_reservation_request: {
+                Args: {
+                    p_full_name: string
+                    p_phone: string
+                    p_email: string | null
+                    p_complex_id: string | null
+                    p_sport: string
+                    p_court_id: string | null
+                    p_preferred_date: string
+                    p_preferred_time: string
+                    p_notes: string | null
+                }
+                Returns: string
+            }
         }
         Enums: {
             [_ in never]: never

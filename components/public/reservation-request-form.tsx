@@ -12,19 +12,47 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Court, Sport } from "@/app/actions/facilities"
 import type { RegisteredComplex } from "@/app/actions/complex-settings"
 
+function normalizeValue(value?: string | null) {
+    return (value || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+}
+
 export function ReservationRequestForm({
     sports,
     courts,
     complexes,
     selectedComplexId,
+    selectedCourtId,
+    selectedDate,
+    selectedTime,
+    selectedSport,
 }: {
     sports: Sport[]
     courts: Court[]
     complexes: RegisteredComplex[]
     selectedComplexId?: string
+    selectedCourtId?: string
+    selectedDate?: string
+    selectedTime?: string
+    selectedSport?: string
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [sent, setSent] = useState(false)
+    const [selectedComplex, setSelectedComplex] = useState(selectedComplexId || "")
+    const [selectedCourt, setSelectedCourt] = useState(selectedCourtId || "")
+    const filteredCourts = selectedComplex
+        ? courts.filter((court) => court.complex_id === selectedComplex)
+        : courts
+    const normalizedSelectedSport = normalizeValue(selectedSport)
+    const initialSport = sports.find((sport) => {
+        const normalizedSportName = normalizeValue(sport.name)
+
+        return normalizedSportName === normalizedSelectedSport ||
+            normalizedSelectedSport.includes(normalizedSportName) ||
+            normalizedSportName.includes(normalizedSelectedSport)
+    })?.name || selectedSport || ""
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -43,6 +71,11 @@ export function ReservationRequestForm({
         form.reset()
         setSent(true)
         toast.success("Solicitud enviada correctamente")
+    }
+
+    const handleComplexChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedComplex(event.target.value)
+        setSelectedCourt("")
     }
 
     if (sent) {
@@ -67,6 +100,15 @@ export function ReservationRequestForm({
 
     return (
         <form onSubmit={handleSubmit} className="grid gap-5 rounded-lg border bg-card p-5 shadow-sm">
+            <input
+                type="text"
+                name="website"
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="sr-only"
+            />
+
             <div>
                 <h2 className="text-xl font-semibold">Tus datos</h2>
                 <p className="text-sm text-muted-foreground">Los usamos solo para coordinar la confirmacion del turno.</p>
@@ -98,7 +140,8 @@ export function ReservationRequestForm({
                 <select
                     id="complexId"
                     name="complexId"
-                    defaultValue={selectedComplexId || ""}
+                    value={selectedComplex}
+                    onChange={handleComplexChange}
                     className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                 >
                     <option value="" className="bg-background text-foreground">Sin preferencia</option>
@@ -117,6 +160,7 @@ export function ReservationRequestForm({
                         id="sport"
                         name="sport"
                         required
+                        defaultValue={initialSport}
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="" className="bg-background text-foreground">Seleccionar</option>
@@ -128,26 +172,36 @@ export function ReservationRequestForm({
                 <div className="grid gap-2">
                     <Label htmlFor="courtId">Cancha o espacio opcional</Label>
                     <select
+                        key={selectedComplex || "all-courts"}
                         id="courtId"
                         name="courtId"
+                        value={selectedCourt}
+                        onChange={(event) => setSelectedCourt(event.target.value)}
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="" className="bg-background text-foreground">Sin preferencia</option>
-                        {courts.map((court) => (
-                            <option key={court.id} value={court.id} className="bg-background text-foreground">{court.name}</option>
+                        {filteredCourts.map((court) => (
+                            <option key={court.id} value={court.id} className="bg-background text-foreground">
+                                {selectedComplex ? court.name : `${court.name}${court.complexes?.name ? ` - ${court.complexes.name}` : ""}`}
+                            </option>
                         ))}
                     </select>
+                    {selectedComplex && filteredCourts.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                            Este complejo todavia no tiene canchas cargadas.
+                        </p>
+                    ) : null}
                 </div>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">
                     <Label htmlFor="preferredDate">Fecha</Label>
-                    <Input id="preferredDate" name="preferredDate" type="date" required />
+                    <Input id="preferredDate" name="preferredDate" type="date" defaultValue={selectedDate || ""} required />
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="preferredTime">Horario</Label>
-                    <Input id="preferredTime" name="preferredTime" type="time" required />
+                    <Input id="preferredTime" name="preferredTime" type="time" defaultValue={selectedTime || ""} required />
                 </div>
             </div>
 

@@ -165,12 +165,28 @@ export function LocationMapPicker({
     const mapWrapperRef = useRef<HTMLDivElement | null>(null)
     const mapRef = useRef<LeafletMap | null>(null)
     const markerRef = useRef<LeafletMarker | null>(null)
+    const onChangeRef = useRef(onChange)
+    const markerIconRef = useRef(selectedMarkerIcon)
+    const initialZoomRef = useRef(initialLatitude && initialLongitude ? 15 : 12)
     const [isMapOpen, setIsMapOpen] = useState(false)
     const [isResolvingAddress, setIsResolvingAddress] = useState(false)
     const [selectedLocation, setSelectedLocation] = useState({
         latitude: initialLatitude ?? DEFAULT_CENTER.latitude,
         longitude: initialLongitude ?? DEFAULT_CENTER.longitude,
     })
+    const selectedLocationRef = useRef(selectedLocation)
+
+    useEffect(() => {
+        onChangeRef.current = onChange
+    }, [onChange])
+
+    useEffect(() => {
+        markerIconRef.current = selectedMarkerIcon
+    }, [selectedMarkerIcon])
+
+    useEffect(() => {
+        selectedLocationRef.current = selectedLocation
+    }, [selectedLocation])
 
     useEffect(() => {
         let isMounted = true
@@ -179,6 +195,7 @@ export function LocationMapPicker({
         loadLeaflet().then((L) => {
             if (!isMounted || !L || !mapElementRef.current || mapRef.current) return
 
+            const currentLocation = selectedLocationRef.current
             const map = L.map(mapElementRef.current, {
                 zoomControl: true,
                 attributionControl: true,
@@ -188,7 +205,7 @@ export function LocationMapPicker({
                 doubleClickZoom: false,
                 boxZoom: false,
                 keyboard: false,
-            }).setView([selectedLocation.latitude, selectedLocation.longitude], initialLatitude && initialLongitude ? 15 : 12)
+            }).setView([currentLocation.latitude, currentLocation.longitude], initialZoomRef.current)
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
@@ -197,12 +214,12 @@ export function LocationMapPicker({
 
             const leafletMarkerIcon = L.divIcon({
                 className: "osm-location-marker",
-                html: `<span><i>${selectedMarkerIcon}</i></span>`,
+                html: `<span><i>${markerIconRef.current}</i></span>`,
                 iconSize: [38, 48],
                 iconAnchor: [19, 44],
             })
 
-            const marker = L.marker([selectedLocation.latitude, selectedLocation.longitude], {
+            const marker = L.marker([currentLocation.latitude, currentLocation.longitude], {
                 icon: leafletMarkerIcon,
             }).addTo(map)
 
@@ -220,7 +237,7 @@ export function LocationMapPicker({
                 setIsResolvingAddress(true)
                 const address = await reverseGeocode(nextLocation.latitude, nextLocation.longitude)
                 setIsResolvingAddress(false)
-                onChange({ ...nextLocation, address })
+                onChangeRef.current({ ...nextLocation, address })
             })
         })
 

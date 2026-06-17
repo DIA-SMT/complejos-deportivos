@@ -4,8 +4,9 @@ import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import { requireAdmin } from "@/app/actions/auth"
+import { requireAuth } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
-import { createComplexBranding, complexConfig, newComplexBranding } from "@/lib/complex-config"
+import { createComplexBranding, complexConfig, newComplexBranding, normalizeMapMarkerIcon } from "@/lib/complex-config"
 
 const ACTIVE_COMPLEX_COOKIE = "activeComplexId"
 
@@ -23,8 +24,7 @@ export type RegisteredComplex = {
 
 export async function getComplexBranding(complexId?: string | null) {
     const supabase = await createClient()
-    const cookieStore = await cookies()
-    const activeComplexId = complexId ?? cookieStore.get(ACTIVE_COMPLEX_COOKIE)?.value ?? null
+    const activeComplexId = complexId ?? await getActiveComplexId()
 
     let query = supabase
         .from("complexes")
@@ -68,12 +68,19 @@ export async function getRegisteredComplexes(): Promise<RegisteredComplex[]> {
 export async function getActiveComplexId(): Promise<string | null> {
     const cookieStore = await cookies()
     const selectedComplexId = cookieStore.get(ACTIVE_COMPLEX_COOKIE)?.value
+    const supabase = await createClient()
 
     if (selectedComplexId) {
-        return selectedComplexId
-    }
+        const { data: selectedComplex, error: selectedComplexError } = await supabase
+            .from("complexes")
+            .select("id")
+            .eq("id", selectedComplexId)
+            .maybeSingle()
 
-    const supabase = await createClient()
+        if (!selectedComplexError && selectedComplex?.id) {
+            return selectedComplex.id
+        }
+    }
 
     const { data, error } = await supabase
         .from("complexes")
@@ -127,6 +134,49 @@ export async function setActiveComplex(formData: FormData) {
     return { success: true }
 }
 
+export async function setUserActiveComplex(formData: FormData) {
+    await requireAuth()
+
+    const complexId = (formData.get("complexId") as string | null)?.trim()
+
+    if (!complexId) {
+        return { error: "Selecciona un complejo." }
+    }
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("complexes")
+        .select("id")
+        .eq("id", complexId)
+        .maybeSingle()
+
+    if (error || !data) {
+        return { error: "El complejo seleccionado no existe." }
+    }
+
+    const cookieStore = await cookies()
+    cookieStore.set(ACTIVE_COMPLEX_COOKIE, complexId, {
+        path: "/",
+        sameSite: "lax",
+        httpOnly: true,
+    })
+
+    revalidatePath("/complejo")
+    revalidatePath("/elegir-complejo")
+
+    return { success: true }
+}
+
+export async function selectUserComplexAndRedirect(formData: FormData) {
+    const result = await setUserActiveComplex(formData)
+
+    if (result?.error) {
+        redirect(`/elegir-complejo?error=${encodeURIComponent(result.error)}`)
+    }
+
+    redirect("/complejo")
+}
+
 export async function selectActiveComplexAndRedirect(formData: FormData) {
     const result = await setActiveComplex(formData)
 
@@ -148,7 +198,7 @@ export async function updateComplexBranding(formData: FormData) {
     const address = (formData.get("address") as string | null)?.trim()
     const latitude = (formData.get("latitude") as string | null)?.trim()
     const longitude = (formData.get("longitude") as string | null)?.trim()
-    const mapMarkerIcon = (formData.get("mapMarkerIcon") as string | null)?.trim()
+    const mapMarkerIcon = normalizeMapMarkerIcon(formData.get("mapMarkerIcon") as string | null)
     const description = (formData.get("description") as string | null)?.trim()
     const footerLine1 = (formData.get("footerLine1") as string | null)?.trim()
     const footerLine2 = (formData.get("footerLine2") as string | null)?.trim()
@@ -184,7 +234,7 @@ export async function updateComplexBranding(formData: FormData) {
         address: address || null,
         latitude: latitude ? Number(latitude) : null,
         longitude: longitude ? Number(longitude) : null,
-        map_marker_icon: mapMarkerIcon || complexConfig.mapMarkerIcon,
+        map_marker_icon: mapMarkerIcon,
         description,
         footer_line_1: footerLine1 || null,
         footer_line_2: footerLine2 || null,

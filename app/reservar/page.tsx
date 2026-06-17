@@ -12,17 +12,20 @@ export const dynamic = "force-dynamic"
 export default async function ReservarPage({
     searchParams,
 }: {
-    searchParams?: Promise<{ complexId?: string }>
+    searchParams?: Promise<{ complexId?: string; courtId?: string; date?: string; time?: string; sport?: string }>
 }) {
     const params = await searchParams
     const selectedComplexId = params?.complexId
-    const [branding, complexes, sports, courts] = await Promise.all([
-        getComplexBranding(),
+    const [complexes, sports] = await Promise.all([
         getRegisteredComplexes(),
         getSports(),
-        getCourts(),
     ])
     const selectedComplex = complexes.find((complex) => complex.id === selectedComplexId)
+    const selectedComplexForQuery = selectedComplex?.id || null
+    const [branding, courts] = await Promise.all([
+        getComplexBranding(selectedComplexForQuery),
+        selectedComplexForQuery ? getCourts({ complexId: selectedComplexForQuery }) : getCourts({ includeAll: true }),
+    ])
 
     return (
         <main className="min-h-screen bg-muted/30">
@@ -77,7 +80,11 @@ export default async function ReservarPage({
                     sports={sports}
                     courts={courts}
                     complexes={complexes}
-                    selectedComplexId={selectedComplexId}
+                    selectedComplexId={selectedComplexForQuery || undefined}
+                    selectedCourtId={params?.courtId}
+                    selectedDate={params?.date}
+                    selectedTime={params?.time}
+                    selectedSport={params?.sport}
                 />
             </section>
         </main>

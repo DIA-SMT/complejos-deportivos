@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import type { ComplexBranding } from "@/lib/complex-config"
+import { mapMarkerOptions } from "@/lib/complex-config"
 
 const markerOptions = [
     { value: "📍", label: "Pin clasico" },
@@ -147,7 +148,7 @@ export function ComplexBrandingForm({ branding }: { branding: ComplexBranding })
                                 onChange={(event) => setMapMarkerIcon(event.target.value)}
                                 className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                             >
-                                {markerOptions.map((option) => (
+                                {(mapMarkerOptions.length ? mapMarkerOptions : markerOptions).map((option) => (
                                     <option key={option.value} value={option.value} className="bg-background text-foreground">
                                         {option.value} {option.label}
                                     </option>

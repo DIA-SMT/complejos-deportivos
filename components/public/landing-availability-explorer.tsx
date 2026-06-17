@@ -9,44 +9,132 @@ import type { Court, Sport } from "@/app/actions/facilities"
 import { Button } from "@/components/ui/button"
 
 const sportVisuals = [
-  { match: ["futbol", "football", "soccer"], icon: "⚽", label: "Pelota de futbol", accent: "from-sky-500/20 to-emerald-500/20" },
-  { match: ["basket", "basquet", "basquetbol"], icon: "🏀", label: "Pelota de basket", accent: "from-orange-500/20 to-red-500/20" },
-  { match: ["voley", "volley", "voleibol"], icon: "🏐", label: "Pelota de voley", accent: "from-yellow-400/20 to-sky-500/20" },
-  { match: ["padel", "tenis", "tennis"], icon: "🎾", label: "Pelota de padel", accent: "from-lime-400/20 to-green-500/20" },
-  { match: ["natacion", "pileta", "swim"], icon: "🏊", label: "Natacion", accent: "from-cyan-400/20 to-blue-500/20" },
-  { match: ["gimnasia", "gym", "funcional"], icon: "🤸", label: "Gimnasia", accent: "from-fuchsia-500/20 to-rose-500/20" },
+  { match: ["futbol", "football", "soccer"], icon: "\u26BD", label: "Pelota de futbol", accent: "from-sky-500/20 to-emerald-500/20" },
+  { match: ["basket", "basquet", "basquetbol"], icon: "\u{1F3C0}", label: "Pelota de basket", accent: "from-orange-500/20 to-red-500/20" },
+  { match: ["voley", "volley", "voleibol"], icon: "\u{1F3D0}", label: "Pelota de voley", accent: "from-yellow-400/20 to-sky-500/20" },
+  { match: ["padel", "tenis", "tennis"], icon: "\u{1F3BE}", label: "Pelota de padel", accent: "from-lime-400/20 to-green-500/20" },
+  { match: ["natacion", "pileta", "swim"], icon: "\u{1F3CA}", label: "Natacion", accent: "from-cyan-400/20 to-blue-500/20" },
+  { match: ["gimnasia", "gym", "funcional"], icon: "\u{1F938}", label: "Gimnasia", accent: "from-fuchsia-500/20 to-rose-500/20" },
 ]
 
 const courtPresets = [
-  { id: "futbol-5", name: "Cancha de futbol 5", type: "Futbol", keywords: ["futbol", "futbol 5", "f5", "soccer"], icon: "⚽", accent: "from-sky-500/20 to-emerald-500/20" },
-  { id: "futbol-11", name: "Cancha de futbol 11", type: "Futbol", keywords: ["futbol", "futbol 11", "f11", "soccer"], icon: "🥅", accent: "from-emerald-500/20 to-green-600/20" },
-  { id: "basket", name: "Cancha de basket", type: "Basket", keywords: ["basket", "basquet", "basquetbol"], icon: "🏀", accent: "from-orange-500/20 to-red-500/20" },
-  { id: "voley", name: "Cancha de voley", type: "Voley", keywords: ["voley", "volley", "voleibol"], icon: "🏐", accent: "from-yellow-400/20 to-sky-500/20" },
-  { id: "padel", name: "Cancha de padel", type: "Padel", keywords: ["padel", "tenis", "tennis"], icon: "🎾", accent: "from-lime-400/20 to-green-500/20" },
-  { id: "pileta", name: "Pileta / natatorio", type: "Natacion", keywords: ["pileta", "natacion", "natatorio", "swim"], icon: "🏊", accent: "from-cyan-400/20 to-blue-500/20" },
+  {
+    id: "futbol-5",
+    name: "Cancha de futbol 5",
+    type: "Futbol",
+    include: ["futbol 5", "futbol5", "f5", "society"],
+    exclude: ["futbol 11", "futbol11", "f11"],
+    icon: "\u26BD",
+    accent: "from-sky-500/20 to-emerald-500/20",
+  },
+  {
+    id: "futbol-11",
+    name: "Cancha de futbol 11",
+    type: "Futbol",
+    include: ["futbol 11", "futbol11", "f11", "cancha grande"],
+    exclude: ["futbol 5", "futbol5", "f5"],
+    icon: "\u{1F945}",
+    accent: "from-emerald-500/20 to-green-600/20",
+  },
+  {
+    id: "basket",
+    name: "Cancha de basket",
+    type: "Basket",
+    include: ["basket", "basquet", "basquetbol"],
+    icon: "\u{1F3C0}",
+    accent: "from-orange-500/20 to-red-500/20",
+  },
+  {
+    id: "voley",
+    name: "Cancha de voley",
+    type: "Voley",
+    include: ["voley", "volley", "voleibol"],
+    icon: "\u{1F3D0}",
+    accent: "from-yellow-400/20 to-sky-500/20",
+  },
+  {
+    id: "padel",
+    name: "Cancha de padel",
+    type: "Padel",
+    include: ["padel", "tenis", "tennis"],
+    icon: "\u{1F3BE}",
+    accent: "from-lime-400/20 to-green-500/20",
+  },
+  {
+    id: "pileta",
+    name: "Pileta / natatorio",
+    type: "Natacion",
+    include: ["pileta", "natacion", "natatorio", "swim"],
+    icon: "\u{1F3CA}",
+    accent: "from-cyan-400/20 to-blue-500/20",
+  },
 ]
 
 type Selection =
-  | { kind: "sport"; name: string; title: string; keywords: string[] }
-  | { kind: "court"; name: string; title: string; keywords: string[] }
+  | { kind: "sport"; name: string; title: string; include: string[]; exclude?: string[] }
+  | { kind: "court"; name: string; title: string; include: string[]; exclude?: string[] }
 
 function normalizeValue(value?: string | null) {
-  return (value || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+  return (value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
 }
 
 function getSportVisual(name: string) {
   const normalizedName = normalizeValue(name)
   return sportVisuals.find((visual) => visual.match.some((term) => normalizedName.includes(term))) || {
     match: [name],
-    icon: "🏅",
+    icon: "\u{1F3C5}",
     label: "Actividad deportiva",
     accent: "from-primary/20 to-emerald-500/20",
   }
 }
 
-function courtMatchesKeywords(court: Court, keywords: string[]) {
+function buildSportSelection(sport: Sport): Selection {
+  const normalizedName = normalizeValue(sport.name)
+
+  if (normalizedName.includes("futbol 11") || normalizedName.includes("futbol11") || normalizedName.includes("f11")) {
+    return {
+      kind: "sport",
+      name: sport.name,
+      title: sport.name,
+      include: ["futbol 11", "futbol11", "f11", "cancha grande"],
+      exclude: ["futbol 5", "futbol5", "f5", "futbol de salon", "futbol salon", "futsal", "sala"],
+    }
+  }
+
+  if (
+    normalizedName.includes("futbol de salon") ||
+    normalizedName.includes("futbol salon") ||
+    normalizedName.includes("futsal") ||
+    normalizedName.includes("sala")
+  ) {
+    return {
+      kind: "sport",
+      name: sport.name,
+      title: sport.name,
+      include: ["futbol de salon", "futbol salon", "futsal", "salon", "sala", "futbol 5", "futbol5", "f5"],
+      exclude: ["futbol 11", "futbol11", "f11", "cancha grande"],
+    }
+  }
+
+  const visual = getSportVisual(sport.name)
+
+  return {
+    kind: "sport",
+    name: sport.name,
+    title: sport.name,
+    include: [sport.name, ...visual.match],
+  }
+}
+
+function courtMatchesSelection(court: Court, selection: Selection) {
   const normalizedCourt = normalizeValue(`${court.name} ${court.type || ""}`)
-  return keywords.map(normalizeValue).some((keyword) => normalizedCourt.includes(keyword))
+  const includesTerm = selection.include.map(normalizeValue).some((term) => normalizedCourt.includes(term))
+  const excludesTerm = selection.exclude?.map(normalizeValue).some((term) => normalizedCourt.includes(term)) || false
+
+  return includesTerm && !excludesTerm
 }
 
 export function LandingAvailabilityExplorer({
@@ -63,7 +151,7 @@ export function LandingAvailabilityExplorer({
 
   const matchingCourts = useMemo(() => {
     if (!selection) return []
-    return courts.filter((court) => court.complex_id && courtMatchesKeywords(court, selection.keywords))
+    return courts.filter((court) => court.complex_id && courtMatchesSelection(court, selection))
   }, [courts, selection])
 
   const matchingComplexes = useMemo(() => {
@@ -93,7 +181,7 @@ export function LandingAvailabilityExplorer({
               <button
                 key={sport.id}
                 type="button"
-                onClick={() => setSelection({ kind: "sport", name: sport.name, title: sport.name, keywords: [sport.name, ...visual.match] })}
+                onClick={() => setSelection(buildSportSelection(sport))}
                 className="group relative min-h-44 overflow-hidden rounded-lg border bg-card p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${visual.accent} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />
@@ -140,7 +228,7 @@ export function LandingAvailabilityExplorer({
               <button
                 key={court.id}
                 type="button"
-                onClick={() => setSelection({ kind: "court", name: court.id, title: court.name, keywords: court.keywords })}
+                onClick={() => setSelection({ kind: "court", name: court.id, title: court.name, include: court.include, exclude: court.exclude })}
                 className="group relative overflow-hidden rounded-lg border bg-background p-5 text-left transition-all duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-lg"
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${court.accent} opacity-0 transition-opacity duration-300 group-hover:opacity-100`} />

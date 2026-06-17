@@ -42,7 +42,7 @@ export function EditInventoryDialog({ item }: { item: InventoryItem }) {
                 toast.success("Item actualizado correctamente")
                 setOpen(false)
             }
-        } catch (error) {
+        } catch {
             toast.error("Ocurrió un error inesperado")
         } finally {
             setLoading(false)

@@ -44,7 +44,12 @@ function DashboardContent({
                     isCollapsed ? "w-16" : "w-64"
                 )}
             >
-                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
+                <Sidebar
+                    className="h-full"
+                    branding={branding}
+                    canManageSettings={user?.role === "admin"}
+                    canManageOperations={user?.role === "admin"}
+                />
             </aside>
 
             {/* Sidebar - Mobile */}
@@ -54,7 +59,12 @@ function DashboardContent({
                     isMobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
-                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
+                <Sidebar
+                    className="h-full"
+                    branding={branding}
+                    canManageSettings={user?.role === "admin"}
+                    canManageOperations={user?.role === "admin"}
+                />
             </aside>
 
             {/* Main Content */}

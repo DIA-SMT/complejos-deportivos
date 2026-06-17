@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home, Building2, IdCard } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,10 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     className?: string
     branding: ComplexBranding
     canManageSettings?: boolean
+    canManageOperations?: boolean
 }
 
-export function Sidebar({ className, branding, canManageSettings = false }: SidebarProps) {
+export function Sidebar({ className, branding, canManageSettings = false, canManageOperations = false }: SidebarProps) {
     const { isCollapsed, toggleSidebar, setIsMobileOpen } = useSidebar()
 
     const handleLinkClick = () => {
@@ -71,7 +72,21 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <span className={cn(isCollapsed && "md:hidden")}>Inicio</span>
                             </Button>
                         </Link>
-                        <Link href="/profesores" onClick={handleLinkClick}>
+                        <Link href="/complejo" onClick={handleLinkClick}>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "w-full",
+                                    isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                )}
+                                title={isCollapsed ? "Complejo" : undefined}
+                            >
+                                <Building2 className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                <span className={cn(isCollapsed && "md:hidden")}>Complejo</span>
+                            </Button>
+                        </Link>
+                        {canManageOperations && (
+                            <Link href="/profesores" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -83,8 +98,10 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <Users className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Profesores</span>
                             </Button>
-                        </Link>
-                        <Link href="/inventario" onClick={handleLinkClick}>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/inventario" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -96,9 +113,11 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <ClipboardList className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Inventario</span>
                             </Button>
-                        </Link>
+                            </Link>
+                        )}
 
-                        <Link href="/turnos" onClick={handleLinkClick}>
+                        {canManageOperations && (
+                            <Link href="/turnos" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -110,8 +129,10 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <CalendarDays className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Turnos</span>
                             </Button>
-                        </Link>
-                        <Link href="/reportes" onClick={handleLinkClick}>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/reportes" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -123,7 +144,23 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <ClipboardList className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Reportes</span>
                             </Button>
-                        </Link>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/socios" onClick={handleLinkClick}>
+                                <Button
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full",
+                                        isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                    )}
+                                    title={isCollapsed ? "Socios" : undefined}
+                                >
+                                    <IdCard className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                    <span className={cn(isCollapsed && "md:hidden")}>Socios</span>
+                                </Button>
+                            </Link>
+                        )}
                         <Link href="/perfil" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"

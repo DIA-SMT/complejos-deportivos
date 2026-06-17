@@ -14,6 +14,18 @@ export type ComplexBranding = {
     assistantName: string
 }
 
+export const mapMarkerOptions = [
+    { value: "\u{1F4CD}", label: "Pin clasico" },
+    { value: "\u{1F3C5}", label: "Polideportivo olimpico" },
+    { value: "\u26BD", label: "Futbol" },
+    { value: "\u{1F3C0}", label: "Basket" },
+    { value: "\u{1F3D0}", label: "Voley" },
+    { value: "\u{1F3BE}", label: "Padel / tenis" },
+    { value: "\u{1F3CA}", label: "Natacion" },
+    { value: "\u{1F938}", label: "Gimnasia" },
+    { value: "\u{1F3CB}\uFE0F", label: "Entrenamiento" },
+]
+
 export const complexConfig: ComplexBranding = {
     appName: "DeportesMunicipio",
     complexName: "Complejo Deportivo Ledesma",
@@ -23,7 +35,7 @@ export const complexConfig: ComplexBranding = {
     address: "",
     latitude: null,
     longitude: null,
-    mapMarkerIcon: "📍",
+    mapMarkerIcon: "\u{1F4CD}",
     description: "Sistema configurable para gestionar complejos deportivos",
     footerLines: [
         "Marca, datos y asistente personalizables",
@@ -40,7 +52,7 @@ export const newComplexBranding: ComplexBranding = {
     address: "",
     latitude: null,
     longitude: null,
-    mapMarkerIcon: "🏅",
+    mapMarkerIcon: "\u{1F3C5}",
     description: "",
     footerLines: complexConfig.footerLines,
 }
@@ -58,6 +70,11 @@ type ComplexBrandingRecord = {
     footer_line_1?: string | null
     footer_line_2?: string | null
     assistant_name?: string | null
+}
+
+export function normalizeMapMarkerIcon(value?: string | null): string {
+    const markerIcon = value?.trim()
+    return mapMarkerOptions.find((option) => option.value === markerIcon)?.value || complexConfig.mapMarkerIcon
 }
 
 export function createComplexBranding(record?: ComplexBrandingRecord | null): ComplexBranding {
@@ -83,7 +100,7 @@ export function createComplexBranding(record?: ComplexBrandingRecord | null): Co
         address: record.address?.trim() || complexConfig.address,
         latitude: record.latitude ?? complexConfig.latitude,
         longitude: record.longitude ?? complexConfig.longitude,
-        mapMarkerIcon: record.map_marker_icon?.trim() || complexConfig.mapMarkerIcon,
+        mapMarkerIcon: normalizeMapMarkerIcon(record.map_marker_icon),
         description: record.description?.trim() || complexConfig.description,
         footerLines,
         assistantName: complexConfig.assistantName,

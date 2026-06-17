@@ -16,20 +16,38 @@ export interface UserProfile {
  */
 export async function getCurrentUser() {
     const supabase = await createClient()
-    
+
     const { data: { user }, error: authError } = await supabase.auth.getUser()
-    
+
     if (authError || !user) {
         console.error('Auth error or no user:', authError)
         return null
     }
 
-    // Obtener el perfil del usuario
-    const { data: profile, error: profileError } = await supabase
+    const { data: existingProfile, error: profileError } = await supabase
         .from('user_profiles')
         .select('*')
         .eq('id', user.id)
-        .single()
+        .maybeSingle()
+    let profile = existingProfile
+
+    if (!profile && !profileError) {
+        const { data: createdProfile, error: createProfileError } = await supabase
+            .from('user_profiles')
+            .insert({
+                id: user.id,
+                email: user.email || '',
+                role: 'common',
+            })
+            .select('*')
+            .single()
+
+        if (createProfileError) {
+            console.error('Profile creation error:', createProfileError)
+        } else {
+            profile = createdProfile
+        }
+    }
 
     if (profileError) {
         console.error('Profile error:', profileError)
@@ -45,7 +63,7 @@ export async function getCurrentUser() {
 
     return {
         id: user.id,
-        email: profile.email,
+        email: user.email || profile.email,
         role: profile.role as UserRole
     } as UserProfile
 }
@@ -78,7 +96,7 @@ export async function requireAdmin(): Promise<UserProfile> {
     const user = await requireAuth()
     
     if (user.role !== 'admin') {
-        redirect('/turnos')
+        redirect('/complejo')
     }
     
     return user

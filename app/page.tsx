@@ -5,20 +5,31 @@ import { getRegisteredComplexes } from "@/app/actions/complex-settings"
 import { getCourts, getSports } from "@/app/actions/facilities"
 import { LandingAvailabilityExplorer } from "@/components/public/landing-availability-explorer"
 import { SportsParallaxBackground } from "@/components/public/sports-parallax-background"
-import { ModeToggle } from "@/components/mode-toggle"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { createClient } from "@/utils/supabase/server"
 
 export const dynamic = "force-dynamic"
 
 export default async function Home() {
+  const supabase = await createClient()
   const [complexes, sports, courts] = await Promise.all([
     getRegisteredComplexes(),
     getSports(),
     getCourts({ includeAll: true }),
   ])
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", user.id)
+      .maybeSingle()
+    : { data: null }
 
   const featuredComplexes = complexes.slice(0, 6)
+  const accountHref = !user ? "/login" : profile?.role === "admin" ? "/seleccionar-complejo" : "/elegir-complejo"
+  const accountLabel = !user ? "Ingresar" : profile?.role === "admin" ? "Panel admin" : "Elegir complejo"
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -52,10 +63,7 @@ export default async function Home() {
             <a href="#complejos" className="text-white/80 hover:text-white">Complejos</a>
             <a href="#actividades" className="text-white/80 hover:text-white">Deportes</a>
             <a href="#espacios" className="text-white/80 hover:text-white">Canchas</a>
-            <Link href="/login" className="text-white/80 hover:text-white">Acceso interno</Link>
-            <div className="rounded-md border border-white/20 bg-white/10 text-white backdrop-blur">
-              <ModeToggle />
-            </div>
+            <Link href={accountHref} className="text-white/80 hover:text-white">{accountLabel}</Link>
             <Button asChild size="sm" className="bg-white text-black hover:bg-white/90">
               <Link href="/reservar">Solicitar turno</Link>
             </Button>
