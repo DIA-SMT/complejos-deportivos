@@ -61,6 +61,13 @@ CREATE UNIQUE INDEX IF NOT EXISTS membership_requests_pending_unique_idx
 ON public.membership_requests(user_id, complex_id)
 WHERE status = 'pending';
 
+UPDATE public.members
+SET user_id = user_profiles.id
+FROM public.user_profiles
+WHERE members.user_id IS NULL
+AND members.email IS NOT NULL
+AND lower(members.email) = lower(user_profiles.email);
+
 ALTER TABLE public.members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.member_credentials ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.membership_requests ENABLE ROW LEVEL SECURITY;
@@ -96,10 +103,7 @@ WITH CHECK (
 CREATE POLICY "members_user_select_own_policy"
 ON public.members
 FOR SELECT
-USING (
-    user_id = auth.uid()
-    OR lower(email) = lower(auth.jwt() ->> 'email')
-);
+USING (user_id = auth.uid());
 
 CREATE POLICY "member_credentials_admin_all_policy"
 ON public.member_credentials
@@ -129,10 +133,7 @@ USING (
         SELECT 1
         FROM public.members
         WHERE members.id = member_credentials.member_id
-        AND (
-            members.user_id = auth.uid()
-            OR lower(members.email) = lower(auth.jwt() ->> 'email')
-        )
+        AND members.user_id = auth.uid()
     )
 );
 
@@ -168,3 +169,164 @@ CREATE POLICY "membership_requests_user_select_own_policy"
 ON public.membership_requests
 FOR SELECT
 USING (user_id = auth.uid());
+
+DROP FUNCTION IF EXISTS public.approve_membership_request(UUID, DATE);
+
+CREATE OR REPLACE FUNCTION public.approve_membership_request(
+    p_request_id UUID,
+    p_expires_at DATE
+)
+RETURNS UUID
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+DECLARE
+    v_request public.membership_requests%ROWTYPE;
+    v_member_id UUID;
+    v_credential_id UUID;
+    v_code TEXT;
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM public.user_profiles
+        WHERE id = auth.uid()
+        AND role = 'admin'
+    ) THEN
+        RAISE EXCEPTION 'No tenes permisos para aprobar solicitudes.';
+    END IF;
+
+    IF p_expires_at IS NULL OR p_expires_at < CURRENT_DATE THEN
+        RAISE EXCEPTION 'La fecha de vencimiento no puede ser anterior a hoy.';
+    END IF;
+
+    SELECT *
+    INTO v_request
+    FROM public.membership_requests
+    WHERE id = p_request_id
+    AND status = 'pending'
+    FOR UPDATE;
+
+    IF NOT FOUND THEN
+        RAISE EXCEPTION 'La solicitud no existe o ya fue procesada.';
+    END IF;
+
+    IF EXISTS (
+        SELECT 1
+        FROM public.members
+        WHERE complex_id = v_request.complex_id
+        AND dni = v_request.dni
+    ) THEN
+        RAISE EXCEPTION 'Ya existe un socio con ese DNI en este complejo.';
+    END IF;
+
+    INSERT INTO public.members (
+        user_id,
+        complex_id,
+        first_name,
+        last_name,
+        dni,
+        phone,
+        email,
+        status,
+        notes
+    )
+    VALUES (
+        v_request.user_id,
+        v_request.complex_id,
+        v_request.first_name,
+        v_request.last_name,
+        v_request.dni,
+        v_request.phone,
+        lower(v_request.email),
+        'active',
+        v_request.notes
+    )
+    RETURNING id INTO v_member_id;
+
+    v_code := 'CRED-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 8));
+
+    INSERT INTO public.member_credentials (
+        member_id,
+        complex_id,
+        code,
+        membership_type,
+        enabled_activities,
+        expires_at,
+        status
+    )
+    VALUES (
+        v_member_id,
+        v_request.complex_id,
+        v_code,
+        v_request.requested_membership_type,
+        v_request.requested_activities,
+        p_expires_at,
+        'active'
+    )
+    RETURNING id INTO v_credential_id;
+
+    UPDATE public.membership_requests
+    SET status = 'approved',
+        updated_at = TIMEZONE('utc'::text, NOW())
+    WHERE id = v_request.id;
+
+    RETURN v_credential_id;
+END;
+$$;
+
+REVOKE ALL ON FUNCTION public.approve_membership_request(UUID, DATE) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.approve_membership_request(UUID, DATE) TO authenticated;
+
+DROP FUNCTION IF EXISTS public.get_public_credential_validation(TEXT);
+
+CREATE OR REPLACE FUNCTION public.get_public_credential_validation(p_code TEXT)
+RETURNS TABLE (
+    id UUID,
+    code TEXT,
+    membership_type TEXT,
+    enabled_activities TEXT[],
+    issued_at DATE,
+    expires_at DATE,
+    status TEXT,
+    complex_id UUID,
+    member_id UUID,
+    first_name TEXT,
+    last_name TEXT,
+    masked_dni TEXT,
+    member_status TEXT,
+    complex_name TEXT,
+    complex_logo_url TEXT
+)
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = pg_catalog, public
+AS $$
+    SELECT
+        credentials.id,
+        credentials.code,
+        credentials.membership_type,
+        credentials.enabled_activities,
+        credentials.issued_at,
+        credentials.expires_at,
+        CASE
+            WHEN credentials.expires_at < CURRENT_DATE THEN 'expired'
+            ELSE credentials.status
+        END,
+        credentials.complex_id,
+        members.id,
+        members.first_name,
+        members.last_name,
+        '***' || right(members.dni, 3),
+        members.status,
+        complexes.name,
+        complexes.logo_url
+    FROM public.member_credentials AS credentials
+    JOIN public.members AS members ON members.id = credentials.member_id
+    JOIN public.complexes AS complexes ON complexes.id = credentials.complex_id
+    WHERE credentials.code = upper(trim(p_code))
+    LIMIT 1;
+$$;
+
+REVOKE ALL ON FUNCTION public.get_public_credential_validation(TEXT) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.get_public_credential_validation(TEXT) TO anon, authenticated;

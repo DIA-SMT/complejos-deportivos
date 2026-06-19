@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Link from "next/link"
 import { toast } from "sonner"
-import { CalendarDays, Send } from "lucide-react"
+import { CalendarDays, CheckCircle2, MapPin, Send } from "lucide-react"
 import { createPublicReservationRequest } from "@/app/actions/public-reservations"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -28,6 +28,7 @@ export function ReservationRequestForm({
     selectedDate,
     selectedTime,
     selectedSport,
+    showComplexPortalLink,
 }: {
     sports: Sport[]
     courts: Court[]
@@ -37,22 +38,30 @@ export function ReservationRequestForm({
     selectedDate?: string
     selectedTime?: string
     selectedSport?: string
+    showComplexPortalLink?: boolean
 }) {
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [sent, setSent] = useState(false)
     const [selectedComplex, setSelectedComplex] = useState(selectedComplexId || "")
-    const [selectedCourt, setSelectedCourt] = useState(selectedCourtId || "")
-    const filteredCourts = selectedComplex
-        ? courts.filter((court) => court.complex_id === selectedComplex)
-        : courts
     const normalizedSelectedSport = normalizeValue(selectedSport)
     const initialSport = sports.find((sport) => {
         const normalizedSportName = normalizeValue(sport.name)
 
-        return normalizedSportName === normalizedSelectedSport ||
+        return sport.id === selectedSport ||
+            normalizedSportName === normalizedSelectedSport ||
             normalizedSelectedSport.includes(normalizedSportName) ||
             normalizedSportName.includes(normalizedSelectedSport)
-    })?.name || selectedSport || ""
+    })
+    const [selectedSportId, setSelectedSportId] = useState(initialSport?.id || "")
+    const selectedSportOption = sports.find((sport) => sport.id === selectedSportId)
+    const complexCourts = selectedComplex
+        ? courts.filter((court) => court.complex_id === selectedComplex)
+        : courts
+    const filteredCourts = selectedSportId
+        ? complexCourts.filter((court) => court.sport_id === selectedSportId)
+        : []
+    const selectedCourtStillValid = selectedCourtId && filteredCourts.some((court) => court.id === selectedCourtId)
+    const [selectedCourt, setSelectedCourt] = useState(selectedCourtStillValid ? selectedCourtId : "")
 
     const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault()
@@ -78,6 +87,11 @@ export function ReservationRequestForm({
         setSelectedCourt("")
     }
 
+    const handleSportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        setSelectedSportId(event.target.value)
+        setSelectedCourt("")
+    }
+
     if (sent) {
         return (
             <div className="rounded-lg border bg-card p-8 text-center">
@@ -90,6 +104,11 @@ export function ReservationRequestForm({
                 </p>
                 <div className="mt-6 flex justify-center gap-3">
                     <Button onClick={() => setSent(false)}>Enviar otra solicitud</Button>
+                    {showComplexPortalLink ? (
+                        <Button asChild variant="outline">
+                            <Link href="/complejo">Ver mis reservas</Link>
+                        </Button>
+                    ) : null}
                     <Button asChild variant="outline">
                         <Link href="/">Volver al inicio</Link>
                     </Button>
@@ -99,7 +118,7 @@ export function ReservationRequestForm({
     }
 
     return (
-        <form onSubmit={handleSubmit} className="grid gap-5 rounded-lg border bg-card p-5 shadow-sm">
+        <form onSubmit={handleSubmit} className="grid gap-6 rounded-lg border bg-card p-6 shadow-sm">
             <input
                 type="text"
                 name="website"
@@ -109,7 +128,7 @@ export function ReservationRequestForm({
                 className="sr-only"
             />
 
-            <div>
+            <div className="rounded-lg border bg-muted/30 p-4">
                 <h2 className="text-xl font-semibold">Tus datos</h2>
                 <p className="text-sm text-muted-foreground">Los usamos solo para coordinar la confirmacion del turno.</p>
             </div>
@@ -130,9 +149,11 @@ export function ReservationRequestForm({
                 <Input id="email" name="email" type="email" placeholder="tu@email.com" />
             </div>
 
-            <div className="border-t pt-5">
+            <div className="rounded-lg border bg-primary/5 p-4">
                 <h2 className="text-xl font-semibold">Preferencia de turno</h2>
-                <p className="text-sm text-muted-foreground">La reserva queda pendiente hasta que el complejo la confirme.</p>
+                <p className="text-sm text-muted-foreground">
+                    Primero elegi la actividad. Despues vas a ver solo las canchas compatibles.
+                </p>
             </div>
 
             <div className="grid gap-2">
@@ -158,41 +179,63 @@ export function ReservationRequestForm({
                     <Label htmlFor="sport">Actividad</Label>
                     <select
                         id="sport"
-                        name="sport"
+                        name="sportId"
                         required
-                        defaultValue={initialSport}
+                        value={selectedSportId}
+                        onChange={handleSportChange}
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
                         <option value="" className="bg-background text-foreground">Seleccionar</option>
                         {sports.map((sport) => (
-                            <option key={sport.id} value={sport.name} className="bg-background text-foreground">{sport.name}</option>
+                            <option key={sport.id} value={sport.id} className="bg-background text-foreground">{sport.name}</option>
                         ))}
                     </select>
                 </div>
                 <div className="grid gap-2">
-                    <Label htmlFor="courtId">Cancha o espacio opcional</Label>
+                    <Label htmlFor="courtId">Cancha o espacio</Label>
                     <select
-                        key={selectedComplex || "all-courts"}
+                        key={`${selectedComplex || "all-courts"}-${selectedSportId || "no-sport"}`}
                         id="courtId"
                         name="courtId"
                         value={selectedCourt}
                         onChange={(event) => setSelectedCourt(event.target.value)}
+                        disabled={!selectedSportId || filteredCourts.length === 0}
                         className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                     >
-                        <option value="" className="bg-background text-foreground">Sin preferencia</option>
+                        <option value="" className="bg-background text-foreground">
+                            {selectedSportId ? "Seleccionar cancha" : "Primero elegi actividad"}
+                        </option>
                         {filteredCourts.map((court) => (
                             <option key={court.id} value={court.id} className="bg-background text-foreground">
                                 {selectedComplex ? court.name : `${court.name}${court.complexes?.name ? ` - ${court.complexes.name}` : ""}`}
                             </option>
                         ))}
                     </select>
-                    {selectedComplex && filteredCourts.length === 0 ? (
+                    {selectedSportId && complexCourts.length > 0 && filteredCourts.length === 0 ? (
+                        <p className="text-xs text-muted-foreground">
+                            No hay canchas cargadas para {selectedSportOption?.name} en este complejo.
+                        </p>
+                    ) : null}
+                    {selectedComplex && complexCourts.length === 0 ? (
                         <p className="text-xs text-muted-foreground">
                             Este complejo todavia no tiene canchas cargadas.
                         </p>
                     ) : null}
                 </div>
             </div>
+
+            {selectedSportOption ? (
+                <div className="grid gap-2 rounded-lg border bg-muted/30 p-3 text-sm text-muted-foreground sm:grid-cols-[1fr_auto] sm:items-center">
+                    <span className="inline-flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 text-primary" />
+                        Actividad seleccionada: <strong className="text-foreground">{selectedSportOption.name}</strong>
+                    </span>
+                    <span className="inline-flex items-center gap-2">
+                        <MapPin className="h-4 w-4 text-primary" />
+                        {filteredCourts.length} cancha(s) compatible(s)
+                    </span>
+                </div>
+            ) : null}
 
             <div className="grid gap-4 sm:grid-cols-2">
                 <div className="grid gap-2">

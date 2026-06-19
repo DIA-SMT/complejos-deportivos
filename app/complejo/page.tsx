@@ -4,7 +4,9 @@ import { Building2, Clock, Dumbbell, LogOut, MapPin, User, Users } from "lucide-
 import { logout, requireAuth } from "@/app/actions/auth"
 import { getComplexPublicOverview } from "@/app/actions/complex-public-overview"
 import { getMyCredentialForActiveComplex, getMyPendingMembershipRequestForActiveComplex } from "@/app/actions/memberships"
+import { getMyReservationRequestsForActiveComplex } from "@/app/actions/public-reservations"
 import { AvailabilityPicker } from "@/components/complex/availability-picker"
+import { UserReservationList } from "@/components/complex/user-reservation-list"
 import { DigitalCredentialCard } from "@/components/members/digital-credential-card"
 import { MembershipRequestForm } from "@/components/members/membership-request-form"
 import { ModeToggle } from "@/components/mode-toggle"
@@ -20,11 +22,12 @@ function formatTime(value: string) {
 }
 
 export default async function ComplejoPage() {
-    const [user, overview, myCredential, pendingMembershipRequest] = await Promise.all([
+    const [user, overview, myCredential, pendingMembershipRequest, myReservationRequests] = await Promise.all([
         requireAuth(),
         getComplexPublicOverview(),
         getMyCredentialForActiveComplex(),
         getMyPendingMembershipRequestForActiveComplex(),
+        getMyReservationRequestsForActiveComplex(),
     ])
     const {
         activeComplexId,
@@ -152,7 +155,7 @@ export default async function ComplejoPage() {
                 </section>
 
                 <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-                    <Card>
+                    <Card id="reservar-turno" className="scroll-mt-24">
                         <CardHeader>
                             <CardTitle>Actividades y espacios</CardTitle>
                             <CardDescription>Deportes disponibles y canchas cargadas para este complejo.</CardDescription>
@@ -267,6 +270,18 @@ export default async function ComplejoPage() {
                         </CardContent>
                     </Card>
                 </div>
+
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Mis reservas</CardTitle>
+                        <CardDescription>
+                            Seguimiento de tus solicitudes en este complejo.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <UserReservationList reservations={myReservationRequests} />
+                    </CardContent>
+                </Card>
 
                 <Card>
                     <CardHeader>

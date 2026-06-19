@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useMemo, useState } from "react"
+import { format } from "date-fns"
 import { ArrowRight, Clock } from "lucide-react"
 import type { Court } from "@/app/actions/facilities"
 import { Button } from "@/components/ui/button"
@@ -28,7 +29,7 @@ const SLOT_END_HOUR = 22
 const SLOT_MINUTES = 60
 
 function toDateInputValue(date: Date) {
-    return date.toISOString().slice(0, 10)
+    return format(date, "yyyy-MM-dd")
 }
 
 function formatDayLabel(date: Date, index: number) {
@@ -69,10 +70,6 @@ function overlapsSlot(slotStart: string, slotEnd: string, itemStart: string, ite
     const itemEndMinutes = itemEnd ? timeToMinutes(itemEnd) : itemStartMinutes + SLOT_MINUTES
 
     return itemStartMinutes < slotEndMinutes && itemEndMinutes > slotStartMinutes
-}
-
-function getCourtSport(court?: Court) {
-    return court?.type?.trim() || court?.name?.trim() || ""
 }
 
 export function AvailabilityPicker({
@@ -198,7 +195,7 @@ export function AvailabilityPicker({
 
                             {!isOccupied ? (
                                 <Button asChild size="sm" className="mt-3 w-full">
-                                    <Link href={`/reservar?complexId=${complexId}&courtId=${selectedCourtId}&date=${selectedDate}&time=${slot.start}&sport=${encodeURIComponent(getCourtSport(selectedCourt))}`}>
+                                    <Link href={`/reservar?complexId=${complexId}&courtId=${selectedCourtId}&date=${selectedDate}&time=${slot.start}&sport=${encodeURIComponent(selectedCourt?.sport_id || "")}`}>
                                         Solicitar
                                         <ArrowRight className="h-4 w-4" />
                                     </Link>

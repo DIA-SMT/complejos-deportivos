@@ -35,7 +35,8 @@ export async function middleware(request: NextRequest) {
 
     const isLoginPage = request.nextUrl.pathname === '/login'
     const publicRoutes = ['/', '/reservar', '/actualizar-contrasena']
-    const isPublicRoute = isLoginPage || publicRoutes.includes(request.nextUrl.pathname)
+    const isPublicCredentialRoute = request.nextUrl.pathname.startsWith('/credencial/')
+    const isPublicRoute = isLoginPage || isPublicCredentialRoute || publicRoutes.includes(request.nextUrl.pathname)
     const adminRoutes = ['/seleccionar-complejo', '/configuracion', '/profesores', '/inventario', '/turnos', '/reportes', '/socios']
     const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`))
 
@@ -84,6 +85,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
     matcher: [
-        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+        '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|mp4|webm)$).*)',
     ],
 }

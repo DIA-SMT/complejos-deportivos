@@ -218,8 +218,22 @@ export function FacilitiesSettings({
                         <Input id="court-name" name="name" placeholder="Ej: Cancha 1" required />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="court-type">Tipo</Label>
-                        <Input id="court-type" name="type" placeholder="Ej: Futbol 5, Pileta, Salon" />
+                        <Label htmlFor="court-sport">Deporte</Label>
+                        <select
+                            id="court-sport"
+                            name="sportId"
+                            required
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm text-foreground shadow-xs outline-none focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                        >
+                            <option value="">Seleccionar deporte</option>
+                            {sports.map((sport) => (
+                                <option key={sport.id} value={sport.id}>{sport.name}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="court-type">Variante o tipo</Label>
+                        <Input id="court-type" name="type" placeholder="Ej: Futbol 5, cancha cubierta" />
                     </div>
                     <input type="hidden" name="complexId" value={selectedComplexId || ""} />
                     <div className="grid gap-2">
@@ -248,7 +262,7 @@ export function FacilitiesSettings({
                             <TableRow>
                                 <TableHead className="w-14">Logo</TableHead>
                                 <TableHead>Cancha / espacio</TableHead>
-                                <TableHead>Tipo</TableHead>
+                                <TableHead>Deporte / tipo</TableHead>
                                 <TableHead>Complejo</TableHead>
                                 <TableHead className="w-16 text-right">Accion</TableHead>
                             </TableRow>
@@ -274,7 +288,12 @@ export function FacilitiesSettings({
                                             )}
                                         </TableCell>
                                         <TableCell className="font-medium">{court.name}</TableCell>
-                                        <TableCell>{court.type || "-"}</TableCell>
+                                        <TableCell>
+                                            <p>{court.sports?.name || "Sin deporte vinculado"}</p>
+                                            {court.type && court.type !== court.sports?.name ? (
+                                                <p className="text-xs text-muted-foreground">{court.type}</p>
+                                            ) : null}
+                                        </TableCell>
                                         <TableCell>{court.complexes?.name || "-"}</TableCell>
                                         <TableCell className="text-right">
                                             <Button variant="ghost" size="icon" onClick={() => handleDeleteCourt(court.id)}>

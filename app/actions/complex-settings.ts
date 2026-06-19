@@ -3,12 +3,13 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { requireAdmin } from "@/app/actions/auth"
-import { requireAuth } from "@/app/actions/auth"
+import { requireAdmin, requireAuth } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
 import { createComplexBranding, complexConfig, newComplexBranding, normalizeMapMarkerIcon } from "@/lib/complex-config"
 
-const ACTIVE_COMPLEX_COOKIE = "activeComplexId"
+const LEGACY_ACTIVE_COMPLEX_COOKIE = "activeComplexId"
+const ADMIN_ACTIVE_COMPLEX_COOKIE = "adminActiveComplexId"
+const USER_ACTIVE_COMPLEX_COOKIE = "userActiveComplexId"
 
 export type RegisteredComplex = {
     id: string
@@ -65,23 +66,8 @@ export async function getRegisteredComplexes(): Promise<RegisteredComplex[]> {
     return data || []
 }
 
-export async function getActiveComplexId(): Promise<string | null> {
-    const cookieStore = await cookies()
-    const selectedComplexId = cookieStore.get(ACTIVE_COMPLEX_COOKIE)?.value
+async function getFirstComplexId() {
     const supabase = await createClient()
-
-    if (selectedComplexId) {
-        const { data: selectedComplex, error: selectedComplexError } = await supabase
-            .from("complexes")
-            .select("id")
-            .eq("id", selectedComplexId)
-            .maybeSingle()
-
-        if (!selectedComplexError && selectedComplex?.id) {
-            return selectedComplex.id
-        }
-    }
-
     const { data, error } = await supabase
         .from("complexes")
         .select("id")
@@ -95,6 +81,43 @@ export async function getActiveComplexId(): Promise<string | null> {
     }
 
     return data?.id || null
+}
+
+async function getValidComplexIdFromCookies(cookieNames: string[]) {
+    const cookieStore = await cookies()
+    const supabase = await createClient()
+
+    for (const cookieName of cookieNames) {
+        const selectedComplexId = cookieStore.get(cookieName)?.value
+
+        if (!selectedComplexId) continue
+
+        const { data: selectedComplex, error: selectedComplexError } = await supabase
+            .from("complexes")
+            .select("id")
+            .eq("id", selectedComplexId)
+            .maybeSingle()
+
+        if (!selectedComplexError && selectedComplex?.id) {
+            return selectedComplex.id
+        }
+    }
+
+    return null
+}
+
+export async function getAdminActiveComplexId(): Promise<string | null> {
+    return await getValidComplexIdFromCookies([ADMIN_ACTIVE_COMPLEX_COOKIE, LEGACY_ACTIVE_COMPLEX_COOKIE])
+        || await getFirstComplexId()
+}
+
+export async function getUserActiveComplexId(): Promise<string | null> {
+    return await getValidComplexIdFromCookies([USER_ACTIVE_COMPLEX_COOKIE, LEGACY_ACTIVE_COMPLEX_COOKIE])
+        || await getFirstComplexId()
+}
+
+export async function getActiveComplexId(): Promise<string | null> {
+    return getAdminActiveComplexId()
 }
 
 export async function setActiveComplex(formData: FormData) {
@@ -118,7 +141,7 @@ export async function setActiveComplex(formData: FormData) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set(ACTIVE_COMPLEX_COOKIE, complexId, {
+    cookieStore.set(ADMIN_ACTIVE_COMPLEX_COOKIE, complexId, {
         path: "/",
         sameSite: "lax",
         httpOnly: true,
@@ -155,7 +178,7 @@ export async function setUserActiveComplex(formData: FormData) {
     }
 
     const cookieStore = await cookies()
-    cookieStore.set(ACTIVE_COMPLEX_COOKIE, complexId, {
+    cookieStore.set(USER_ACTIVE_COMPLEX_COOKIE, complexId, {
         path: "/",
         sameSite: "lax",
         httpOnly: true,
@@ -254,7 +277,7 @@ export async function updateComplexBranding(formData: FormData) {
 
     if (result.data?.id) {
         const cookieStore = await cookies()
-        cookieStore.set(ACTIVE_COMPLEX_COOKIE, result.data.id, {
+        cookieStore.set(ADMIN_ACTIVE_COMPLEX_COOKIE, result.data.id, {
             path: "/",
             sameSite: "lax",
             httpOnly: true,

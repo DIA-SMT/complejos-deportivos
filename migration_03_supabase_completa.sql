@@ -1,37 +1,26 @@
--- Solicitudes publicas de reserva en una unica transaccion.
--- Ejecutar en Supabase SQL Editor despues de migrations_public_reservations.sql.
+-- Migracion 03: RPC para solicitudes publicas de reserva.
+-- Ejecutar completa luego de:
+--   migrations_public_reservations.sql
+--   migrations_court_sports.sql
 
 CREATE UNIQUE INDEX IF NOT EXISTS reservation_requests_unique_active_slot_idx
-ON public.reservation_requests(court_id, preferred_date, preferred_time)
+ON public.reservation_requests (court_id, preferred_date, preferred_time)
 WHERE court_id IS NOT NULL
-AND status IN ('pending', 'confirmed');
+  AND status IN ('pending', 'confirmed');
 
 DROP FUNCTION IF EXISTS public.create_public_reservation_request(
-    TEXT,
-    TEXT,
-    TEXT,
-    UUID,
-    TEXT,
-    UUID,
-    DATE,
-    TIME,
-    TEXT
+    TEXT, TEXT, TEXT, UUID, TEXT, UUID, DATE, TIME, TEXT
 );
 
 DROP FUNCTION IF EXISTS public.create_public_reservation_request(
-    TEXT,
-    TEXT,
-    TEXT,
-    UUID,
-    TEXT,
-    UUID,
-    DATE,
-    TIME,
-    TEXT,
-    UUID
+    TEXT, TEXT, TEXT, UUID, TEXT, UUID, DATE, TIME, TEXT, UUID
 );
 
-CREATE OR REPLACE FUNCTION public.create_public_reservation_request(
+DROP FUNCTION IF EXISTS public.create_public_reservation_request(
+    TEXT, TEXT, TEXT, UUID, UUID, UUID, DATE, TIME, TEXT
+);
+
+CREATE FUNCTION public.create_public_reservation_request(
     p_full_name TEXT,
     p_phone TEXT,
     p_email TEXT,
@@ -46,7 +35,7 @@ RETURNS UUID
 LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = pg_catalog, public
-AS $$
+AS $migration$
 DECLARE
     v_full_name TEXT := NULLIF(TRIM(p_full_name), '');
     v_phone TEXT := NULLIF(TRIM(p_phone), '');
@@ -60,15 +49,19 @@ DECLARE
     v_citizen_id UUID;
     v_request_id UUID;
 BEGIN
-    IF v_full_name IS NULL OR LENGTH(v_full_name) < 3 OR LENGTH(v_full_name) > 120 THEN
+    IF v_full_name IS NULL
+       OR LENGTH(v_full_name) < 3
+       OR LENGTH(v_full_name) > 120 THEN
         RAISE EXCEPTION 'Ingresa un nombre valido.';
     END IF;
 
-    IF v_phone IS NULL OR v_phone !~ '^[0-9+()\-\s]{6,30}$' THEN
+    IF v_phone IS NULL
+       OR v_phone !~ '^[0-9+() -]{6,30}$' THEN
         RAISE EXCEPTION 'Ingresa un telefono valido.';
     END IF;
 
-    IF v_email IS NOT NULL AND v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' THEN
+    IF v_email IS NOT NULL
+       AND v_email !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' THEN
         RAISE EXCEPTION 'Ingresa un email valido.';
     END IF;
 
@@ -76,70 +69,80 @@ BEGIN
         RAISE EXCEPTION 'Selecciona una actividad.';
     END IF;
 
-    SELECT name
+    SELECT s.name
     INTO v_sport
-    FROM public.sports
-    WHERE id = p_sport_id;
+    FROM public.sports AS s
+    WHERE s.id = p_sport_id;
 
     IF NOT FOUND THEN
         RAISE EXCEPTION 'La actividad seleccionada no existe.';
     END IF;
 
-    IF p_preferred_date < CURRENT_DATE THEN
+    IF p_preferred_date IS NULL
+       OR p_preferred_date < CURRENT_DATE THEN
         RAISE EXCEPTION 'La fecha no puede ser anterior a hoy.';
     END IF;
 
-    IF v_notes IS NOT NULL AND LENGTH(v_notes) > 500 THEN
+    IF p_preferred_time IS NULL THEN
+        RAISE EXCEPTION 'Selecciona un horario.';
+    END IF;
+
+    IF v_notes IS NOT NULL
+       AND LENGTH(v_notes) > 500 THEN
         RAISE EXCEPTION 'El comentario no puede superar los 500 caracteres.';
     END IF;
 
-    IF v_complex_id IS NOT NULL AND NOT EXISTS (
-        SELECT 1
-        FROM public.complexes
-        WHERE id = v_complex_id
-    ) THEN
+    IF v_complex_id IS NOT NULL
+       AND NOT EXISTS (
+           SELECT 1
+           FROM public.complexes AS c
+           WHERE c.id = v_complex_id
+       ) THEN
         RAISE EXCEPTION 'El complejo seleccionado no existe.';
     END IF;
 
     IF p_court_id IS NOT NULL THEN
-        SELECT complex_id, sport_id
+        SELECT c.complex_id, c.sport_id
         INTO v_court_complex_id, v_court_sport_id
-        FROM public.courts
-        WHERE id = p_court_id;
+        FROM public.courts AS c
+        WHERE c.id = p_court_id;
 
         IF NOT FOUND THEN
             RAISE EXCEPTION 'La cancha seleccionada no existe.';
         END IF;
 
-        IF v_complex_id IS NOT NULL AND v_court_complex_id IS NOT NULL AND v_court_complex_id <> v_complex_id THEN
-            RAISE EXCEPTION 'La cancha seleccionada no pertenece al complejo elegido.';
+        IF v_complex_id IS NOT NULL
+           AND v_court_complex_id IS NOT NULL
+           AND v_court_complex_id <> v_complex_id THEN
+            RAISE EXCEPTION 'La cancha no pertenece al complejo elegido.';
         END IF;
 
-        IF v_court_sport_id IS NULL OR v_court_sport_id <> p_sport_id THEN
-            RAISE EXCEPTION 'La cancha seleccionada no corresponde a la actividad elegida.';
+        IF v_court_sport_id IS NULL
+           OR v_court_sport_id <> p_sport_id THEN
+            RAISE EXCEPTION 'La cancha no corresponde a la actividad elegida.';
         END IF;
 
         v_complex_id := COALESCE(v_complex_id, v_court_complex_id);
 
         IF EXISTS (
             SELECT 1
-            FROM public.reservation_requests
-            WHERE court_id = p_court_id
-            AND preferred_date = p_preferred_date
-            AND preferred_time = p_preferred_time
-            AND status IN ('pending', 'confirmed')
+            FROM public.reservation_requests AS r
+            WHERE r.court_id = p_court_id
+              AND r.preferred_date = p_preferred_date
+              AND r.preferred_time = p_preferred_time
+              AND r.status IN ('pending', 'confirmed')
         ) THEN
-            RAISE EXCEPTION 'Ese horario ya esta reservado o pendiente de confirmacion.';
+            RAISE EXCEPTION 'Ese horario ya esta reservado o pendiente.';
         END IF;
 
         IF EXISTS (
             SELECT 1
-            FROM public.shifts
-            WHERE court_id = p_court_id
-            AND date = p_preferred_date
-            AND COALESCE(status, '') <> 'cancelled'
-            AND start_time < (p_preferred_time + INTERVAL '1 hour')::time
-            AND end_time > p_preferred_time
+            FROM public.shifts AS s
+            WHERE s.court_id = p_court_id
+              AND s.date = p_preferred_date
+              AND COALESCE(s.status, '') <> 'cancelled'
+              AND s.start_time < (p_preferred_time + INTERVAL '1 hour')::TIME
+              AND s.end_time > p_preferred_time
         ) THEN
             RAISE EXCEPTION 'Ese horario ya esta ocupado.';
         END IF;
@@ -177,28 +180,12 @@ BEGIN
 
     RETURN v_request_id;
 END;
-$$;
+$migration$;
 
 REVOKE ALL ON FUNCTION public.create_public_reservation_request(
-    TEXT,
-    TEXT,
-    TEXT,
-    UUID,
-    UUID,
-    UUID,
-    DATE,
-    TIME,
-    TEXT
+    TEXT, TEXT, TEXT, UUID, UUID, UUID, DATE, TIME, TEXT
 ) FROM PUBLIC;
 
 GRANT EXECUTE ON FUNCTION public.create_public_reservation_request(
-    TEXT,
-    TEXT,
-    TEXT,
-    UUID,
-    UUID,
-    UUID,
-    DATE,
-    TIME,
-    TEXT
+    TEXT, TEXT, TEXT, UUID, UUID, UUID, DATE, TIME, TEXT
 ) TO anon, authenticated;

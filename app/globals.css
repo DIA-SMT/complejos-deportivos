@@ -363,11 +363,11 @@
 
   .migue-hero-scene {
     position: absolute;
-    right: clamp(-7rem, 4vw, 5rem);
-    bottom: -5.5rem;
-    width: min(44vw, 34rem);
-    min-width: 25rem;
-    aspect-ratio: 1;
+    right: clamp(-4rem, 3vw, 3rem);
+    bottom: -1.5rem;
+    width: min(29vw, 21rem);
+    min-width: 0;
+    aspect-ratio: 426 / 704;
     transform-origin: 50% 80%;
     transition: transform 180ms ease-out;
     will-change: transform;
@@ -375,26 +375,44 @@
   }
 
   .migue-hero-character {
-    position: absolute;
-    inset: 6% 3% auto auto;
-    width: 92%;
-    height: auto;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center bottom;
     filter: drop-shadow(0 30px 42px rgba(0, 0, 0, 0.42));
     transform-origin: 50% 32%;
     will-change: transform;
+    cursor: pointer;
   }
 
-  .migue-hero-scene:hover .migue-hero-character {
-    animation: migue-laugh 0.42s ease-in-out infinite;
-  }
-
-  @media (max-width: 768px) {
+  @media (min-width: 769px) and (max-width: 1100px) {
     .migue-hero-scene {
-      right: -8rem;
-      bottom: -4rem;
-      width: 26rem;
+      right: -2rem;
+      width: 16rem;
+    }
+  }
+
+  @media (min-width: 641px) and (max-width: 768px) {
+    .migue-hero-scene {
+      right: -7rem;
+      bottom: -2rem;
+      width: 21rem;
       min-width: 0;
-      opacity: 0.5;
+      opacity: 0.38;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .migue-hero-scene {
+      display: none;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .migue-hero-scene {
+      transition: none;
+      transform: none !important;
     }
   }
 
@@ -406,21 +424,6 @@
     50% {
       opacity: 1;
       transform: rotate(45deg) scale(1.08);
-    }
-  }
-
-  @keyframes migue-laugh {
-    0%, 100% {
-      transform: translateY(0) rotate(0deg) scale(1);
-    }
-    25% {
-      transform: translateY(-5px) rotate(-1.6deg) scale(1.015);
-    }
-    50% {
-      transform: translateY(1px) rotate(1.4deg) scale(1.01);
-    }
-    75% {
-      transform: translateY(-3px) rotate(-0.8deg) scale(1.015);
     }
   }
 

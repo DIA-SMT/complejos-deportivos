@@ -16,10 +16,12 @@ export type Court = {
     id: string
     name: string
     type: string | null
+    sport_id: string | null
     icon_url: string | null
     complex_id: string | null
     created_at: string | null
     complexes?: { name: string } | null
+    sports?: { id: string; name: string } | null
 }
 
 const fallbackSports = ["Futbol", "Voley", "Basket", "Gimnasia", "Padel", "Natacion"]
@@ -54,7 +56,7 @@ export async function getCourts(options?: { includeAll?: boolean; complexId?: st
 
     let query = supabase
         .from("courts")
-        .select("*, complexes(name)")
+        .select("*, complexes(name), sports(id, name)")
         .order("name", { ascending: true })
 
     if (selectedComplexId) {
@@ -71,6 +73,7 @@ export async function getCourts(options?: { includeAll?: boolean; complexId?: st
     return (data || []).map((court) => ({
         ...court,
         icon_url: "icon_url" in court ? court.icon_url : null,
+        sports: Array.isArray(court.sports) ? court.sports[0] || null : court.sports,
     })) as Court[]
 }
 
@@ -128,11 +131,12 @@ export async function createCourt(formData: FormData) {
 
     const name = (formData.get("name") as string | null)?.trim()
     const type = (formData.get("type") as string | null)?.trim()
+    const sportId = (formData.get("sportId") as string | null)?.trim()
     const complexId = (formData.get("complexId") as string | null)?.trim()
     const iconUrl = (formData.get("iconUrl") as string | null)?.trim()
 
-    if (!name) {
-        return { error: "El nombre de la cancha es requerido" }
+    if (!name || !sportId) {
+        return { error: "El nombre y el deporte de la cancha son requeridos" }
     }
 
     const supabase = await createClient()
@@ -143,9 +147,20 @@ export async function createCourt(formData: FormData) {
         return { error: "Selecciona un complejo antes de cargar una cancha." }
     }
 
+    const { data: sport, error: sportError } = await supabase
+        .from("sports")
+        .select("id, name")
+        .eq("id", sportId)
+        .maybeSingle()
+
+    if (sportError || !sport) {
+        return { error: "El deporte seleccionado no existe." }
+    }
+
     const { error } = await supabase.from("courts").insert({
         name,
-        type: type || null,
+        type: type || sport.name,
+        sport_id: sport.id,
         complex_id: selectedComplexId,
         icon_url: iconUrl || null,
     })
@@ -153,7 +168,8 @@ export async function createCourt(formData: FormData) {
     if (error?.message.includes("Could not find the 'icon_url' column")) {
         const { error: retryError } = await supabase.from("courts").insert({
             name,
-            type: type || null,
+            type: type || sport.name,
+            sport_id: sport.id,
             complex_id: selectedComplexId,
         })
 

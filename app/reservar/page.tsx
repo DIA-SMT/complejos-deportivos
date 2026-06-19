@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, CalendarCheck, ClipboardList, MapPin } from "lucide-react"
 import { getComplexBranding, getRegisteredComplexes } from "@/app/actions/complex-settings"
 import { getCourts, getSports } from "@/app/actions/facilities"
 import { ReservationRequestForm } from "@/components/public/reservation-request-form"
@@ -56,23 +56,40 @@ export default async function ReservarPage({
                 </div>
             </header>
 
-            <section className="mx-auto grid max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[0.8fr_1.2fr]">
-                <div className="lg:pt-8">
-                    <p className="text-sm font-medium text-primary">Reserva ciudadana</p>
-                    <h1 className="mt-2 text-4xl font-bold tracking-tight">Solicita tu turno</h1>
-                    <p className="mt-4 text-muted-foreground">
-                        Completa tus datos y una preferencia de actividad, fecha y horario.
-                        La solicitud queda pendiente hasta que el complejo confirme disponibilidad.
-                    </p>
+            <section className="mx-auto grid max-w-6xl gap-8 px-5 py-10 lg:grid-cols-[0.75fr_1.25fr]">
+                <div className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+                    <div>
+                        <p className="text-sm font-medium text-primary">Reserva ciudadana</p>
+                        <h1 className="mt-2 text-4xl font-bold tracking-tight">Solicita tu turno</h1>
+                        <p className="mt-4 text-muted-foreground">
+                            Elegi actividad, cancha compatible, fecha y horario. La solicitud queda pendiente hasta que el complejo la confirme.
+                        </p>
+                    </div>
                     {selectedComplex ? (
-                        <div className="mt-6 rounded-lg border bg-background p-4 text-sm">
-                            <p className="font-medium">Complejo seleccionado</p>
+                        <div className="rounded-lg border bg-background p-4 text-sm">
+                            <p className="inline-flex items-center gap-2 font-medium">
+                                <MapPin className="h-4 w-4 text-primary" />
+                                Complejo seleccionado
+                            </p>
                             <p className="mt-1 text-muted-foreground">{selectedComplex.name}</p>
                         </div>
                     ) : null}
-                    <div className="mt-6 rounded-lg border bg-background p-4 text-sm text-muted-foreground">
-                        Este formulario inicia el registro de clientes/ciudadanos para futuras reservas,
-                        historial de turnos y comunicaciones del complejo.
+
+                    <div className="grid gap-3">
+                        <div className="rounded-lg border bg-background p-4 text-sm">
+                            <p className="inline-flex items-center gap-2 font-medium">
+                                <ClipboardList className="h-4 w-4 text-primary" />
+                                1. Datos de contacto
+                            </p>
+                            <p className="mt-1 text-muted-foreground">Sirven para confirmar o rechazar la solicitud.</p>
+                        </div>
+                        <div className="rounded-lg border bg-background p-4 text-sm">
+                            <p className="inline-flex items-center gap-2 font-medium">
+                                <CalendarCheck className="h-4 w-4 text-primary" />
+                                2. Actividad y horario
+                            </p>
+                            <p className="mt-1 text-muted-foreground">Las canchas se filtran segun el deporte elegido.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -85,6 +102,7 @@ export default async function ReservarPage({
                     selectedDate={params?.date}
                     selectedTime={params?.time}
                     selectedSport={params?.sport}
+                    showComplexPortalLink={Boolean(selectedComplexForQuery)}
                 />
             </section>
         </main>

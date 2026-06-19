@@ -1,8 +1,8 @@
 'use server'
 
-import { addDays } from "date-fns"
+import { addDays, format } from "date-fns"
 import { requireAuth } from "@/app/actions/auth"
-import { getActiveComplexId, getComplexBranding } from "@/app/actions/complex-settings"
+import { getComplexBranding, getUserActiveComplexId } from "@/app/actions/complex-settings"
 import { getCourts, getSports } from "@/app/actions/facilities"
 import { createClient } from "@/utils/supabase/server"
 
@@ -10,10 +10,10 @@ export async function getComplexPublicOverview() {
     await requireAuth()
 
     const supabase = await createClient()
-    const activeComplexId = await getActiveComplexId()
+    const activeComplexId = await getUserActiveComplexId()
     const today = new Date()
-    const startDate = today.toISOString().slice(0, 10)
-    const endDate = addDays(today, 14).toISOString().slice(0, 10)
+    const startDate = format(today, "yyyy-MM-dd")
+    const endDate = format(addDays(today, 14), "yyyy-MM-dd")
 
     if (!activeComplexId) {
         return {

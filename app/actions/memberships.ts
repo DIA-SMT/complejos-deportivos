@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { requireAdmin, requireAuth } from "@/app/actions/auth"
-import { getActiveComplexId } from "@/app/actions/complex-settings"
+import { getActiveComplexId, getUserActiveComplexId } from "@/app/actions/complex-settings"
 import { createClient } from "@/utils/supabase/server"
 
 export type MemberWithCredential = {
@@ -81,6 +81,17 @@ function normalizeMembershipType(value?: string | null) {
     return membershipTypes.has(type) ? type : "mensual"
 }
 
+function getEffectiveCredentialStatus(status: string, expiresAt: string) {
+    const localToday = new Intl.DateTimeFormat("en-CA", {
+        timeZone: "America/Argentina/Buenos_Aires",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }).format(new Date())
+
+    return expiresAt < localToday ? "expired" : status
+}
+
 function revalidateMemberships() {
     revalidatePath("/socios")
     revalidatePath("/complejo")
@@ -154,7 +165,7 @@ export async function getMembershipRequestsForActiveComplex(): Promise<Membershi
 export async function getMyPendingMembershipRequestForActiveComplex(): Promise<MembershipRequest | null> {
     const user = await requireAuth()
     const supabase = await createClient()
-    const activeComplexId = await getActiveComplexId()
+    const activeComplexId = await getUserActiveComplexId()
 
     if (!activeComplexId) return null
 
@@ -177,7 +188,7 @@ export async function getMyPendingMembershipRequestForActiveComplex(): Promise<M
 export async function getMyCredentialForActiveComplex(): Promise<CredentialWithMember | null> {
     const user = await requireAuth()
     const supabase = await createClient()
-    const activeComplexId = await getActiveComplexId()
+    const activeComplexId = await getUserActiveComplexId()
 
     if (!activeComplexId) return null
 
@@ -192,7 +203,7 @@ export async function getMyCredentialForActiveComplex(): Promise<CredentialWithM
             expires_at,
             status,
             complex_id,
-            members (
+            members!inner (
                 id,
                 first_name,
                 last_name,
@@ -205,7 +216,7 @@ export async function getMyCredentialForActiveComplex(): Promise<CredentialWithM
             )
         `)
         .eq("complex_id", activeComplexId)
-        .eq("members.email", user.email)
+        .eq("members.user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle()
@@ -215,18 +226,71 @@ export async function getMyCredentialForActiveComplex(): Promise<CredentialWithM
         return null
     }
 
-    return data as CredentialWithMember | null
+    if (!data) return null
+
+    return {
+        ...data,
+        status: getEffectiveCredentialStatus(data.status, data.expires_at),
+    } as CredentialWithMember
 }
 
 export async function getCredentialByCode(code: string): Promise<CredentialWithMember | null> {
-    await requireAuth()
-
     const supabase = await createClient()
     const credentialCode = code.trim().toUpperCase()
 
     if (!credentialCode) return null
 
     const { data, error } = await supabase
+        .rpc("get_public_credential_validation", { p_code: credentialCode })
+
+    if (error) {
+        console.error("Error fetching credential by code:", error)
+    }
+
+    const credential = data?.[0]
+
+    if (credential) {
+        return {
+            id: credential.id,
+            code: credential.code,
+            membership_type: credential.membership_type,
+            enabled_activities: credential.enabled_activities,
+            issued_at: credential.issued_at,
+            expires_at: credential.expires_at,
+            status: getEffectiveCredentialStatus(credential.status, credential.expires_at),
+            complex_id: credential.complex_id,
+            members: {
+                id: credential.member_id,
+                first_name: credential.first_name,
+                last_name: credential.last_name,
+                dni: credential.masked_dni,
+                phone: null,
+                email: null,
+                photo_url: null,
+                status: credential.member_status,
+                complexes: {
+                    name: credential.complex_name,
+                    logo_url: credential.complex_logo_url,
+                },
+            },
+        }
+    }
+
+    const {
+        data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) return null
+
+    const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
+
+    if (profile?.role !== "admin") return null
+
+    const { data: adminCredential, error: adminCredentialError } = await supabase
         .from("member_credentials")
         .select(`
             id,
@@ -237,7 +301,7 @@ export async function getCredentialByCode(code: string): Promise<CredentialWithM
             expires_at,
             status,
             complex_id,
-            members (
+            members!inner (
                 id,
                 first_name,
                 last_name,
@@ -252,18 +316,23 @@ export async function getCredentialByCode(code: string): Promise<CredentialWithM
         .eq("code", credentialCode)
         .maybeSingle()
 
-    if (error) {
-        console.error("Error fetching credential by code:", error)
+    if (adminCredentialError) {
+        console.error("Error fetching credential for admin:", adminCredentialError)
         return null
     }
 
-    return data as CredentialWithMember | null
+    if (!adminCredential) return null
+
+    return {
+        ...adminCredential,
+        status: getEffectiveCredentialStatus(adminCredential.status, adminCredential.expires_at),
+    } as CredentialWithMember
 }
 
 export async function requestMembership(formData: FormData) {
     const user = await requireAuth()
     const supabase = await createClient()
-    const activeComplexId = await getActiveComplexId()
+    const activeComplexId = await getUserActiveComplexId()
     const firstName = (formData.get("firstName") as string | null)?.trim()
     const lastName = (formData.get("lastName") as string | null)?.trim()
     const dni = (formData.get("dni") as string | null)?.trim()
@@ -362,9 +431,18 @@ export async function createMemberWithCredential(formData: FormData) {
         return { error: "Ya existe un socio con ese DNI en este complejo." }
     }
 
+    const { data: linkedProfile } = email
+        ? await supabase
+            .from("user_profiles")
+            .select("id")
+            .ilike("email", email)
+            .maybeSingle()
+        : { data: null }
+
     const { data: member, error: memberError } = await supabase
         .from("members")
         .insert({
+            user_id: linkedProfile?.id || null,
             complex_id: activeComplexId,
             first_name: firstName,
             last_name: lastName,
@@ -420,71 +498,15 @@ export async function approveMembershipRequest(formData: FormData) {
         return { error: "Falta solicitud o fecha de vencimiento." }
     }
 
-    const { data: request, error: requestError } = await supabase
-        .from("membership_requests")
-        .select("*")
-        .eq("id", requestId)
-        .eq("status", "pending")
-        .maybeSingle()
+    const { error } = await supabase.rpc("approve_membership_request", {
+        p_request_id: requestId,
+        p_expires_at: expiresAt,
+    })
 
-    if (requestError || !request) {
-        return { error: "La solicitud no existe o ya fue procesada." }
+    if (error) {
+        console.error("Error approving membership request:", error)
+        return { error: error.message || "No se pudo aprobar la solicitud." }
     }
-
-    const { data: existingMember } = await supabase
-        .from("members")
-        .select("id")
-        .eq("complex_id", request.complex_id)
-        .eq("dni", request.dni)
-        .maybeSingle()
-
-    if (existingMember) {
-        return { error: "Ya existe un socio con ese DNI en este complejo." }
-    }
-
-    const { data: member, error: memberError } = await supabase
-        .from("members")
-        .insert({
-            user_id: request.user_id,
-            complex_id: request.complex_id,
-            first_name: request.first_name,
-            last_name: request.last_name,
-            dni: request.dni,
-            phone: request.phone,
-            email: normalizeEmail(request.email),
-            status: "active",
-            notes: request.notes,
-        })
-        .select("id")
-        .single()
-
-    if (memberError || !member) {
-        console.error("Error approving member:", memberError)
-        return { error: "No se pudo crear el socio." }
-    }
-
-    const { error: credentialError } = await supabase
-        .from("member_credentials")
-        .insert({
-            member_id: member.id,
-            complex_id: request.complex_id,
-            code: generateCredentialCode(),
-            membership_type: request.requested_membership_type,
-            enabled_activities: request.requested_activities,
-            expires_at: expiresAt,
-            status: "active",
-        })
-
-    if (credentialError) {
-        console.error("Error approving credential:", credentialError)
-        await supabase.from("members").delete().eq("id", member.id)
-        return { error: "No se pudo crear la credencial." }
-    }
-
-    await supabase
-        .from("membership_requests")
-        .update({ status: "approved" })
-        .eq("id", request.id)
 
     revalidateMemberships()
     return { success: true }
