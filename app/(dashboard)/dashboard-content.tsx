@@ -10,6 +10,7 @@ import { logout } from "@/app/actions/auth"
 import { UserProfile } from "@/app/actions/auth"
 import { Badge } from "@/components/ui/badge"
 import { ModeToggle } from "@/components/mode-toggle"
+import { Chatbot } from "@/components/chatbot/chatbot"
 import type { ComplexBranding } from "@/lib/complex-config"
 
 function DashboardContent({
@@ -47,8 +48,9 @@ function DashboardContent({
                 <Sidebar
                     className="h-full"
                     branding={branding}
-                    canManageSettings={user?.role === "admin"}
-                    canManageOperations={user?.role === "admin"}
+                    canManageSettings={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageOperations={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageAdmins={user?.role === "superadmin"}
                 />
             </aside>
 
@@ -62,8 +64,9 @@ function DashboardContent({
                 <Sidebar
                     className="h-full"
                     branding={branding}
-                    canManageSettings={user?.role === "admin"}
-                    canManageOperations={user?.role === "admin"}
+                    canManageSettings={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageOperations={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageAdmins={user?.role === "superadmin"}
                 />
             </aside>
 
@@ -96,6 +99,7 @@ function DashboardContent({
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
+                        <Chatbot variant="header" />
                         <ModeToggle />
                         <Link href="/seleccionar-complejo">
                             <Button variant="outline" size="sm" className="hidden md:inline-flex">
@@ -112,8 +116,8 @@ function DashboardContent({
                                     >
                                         <User className="h-4 w-4" />
                                         <span className="hidden md:inline text-xs">{user.email}</span>
-                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs transition-all duration-300">
-                                            {user.role === 'admin' ? 'Admin' : 'Usuario'}
+                                        <Badge variant={user.role !== 'common' ? 'default' : 'secondary'} className="text-xs transition-all duration-300">
+                                            {user.role === 'superadmin' ? 'Superadmin' : user.role === 'complex_admin' ? 'Admin' : 'Usuario'}
                                         </Badge>
                                     </Button>
                                 </Link>
@@ -137,7 +141,7 @@ function DashboardContent({
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 space-y-4 p-4 md:p-8 pt-4 md:pt-6 animate-fade-in">
+                <div className="flex-1 space-y-4 p-4 md:p-8 md:pt-6 animate-fade-in">
                     {children}
                 </div>
             </main>

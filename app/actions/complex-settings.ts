@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
-import { requireAdmin, requireAuth } from "@/app/actions/auth"
+import { requireAdmin, requireAuth, requireSuperAdmin } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
 import { createComplexBranding, complexConfig, newComplexBranding, normalizeMapMarkerIcon } from "@/lib/complex-config"
 
@@ -25,7 +25,25 @@ export type RegisteredComplex = {
 
 export async function getComplexBranding(complexId?: string | null) {
     const supabase = await createClient()
-    const activeComplexId = complexId ?? await getActiveComplexId()
+    let activeComplexId = complexId || null
+
+    if (!activeComplexId) {
+        const { data: { user } } = await supabase.auth.getUser()
+
+        if (user) {
+            const { data: profile } = await supabase
+                .from("user_profiles")
+                .select("role")
+                .eq("id", user.id)
+                .maybeSingle()
+
+            activeComplexId = profile?.role === "superadmin" || profile?.role === "complex_admin"
+                ? await getAdminActiveComplexId()
+                : await getUserActiveComplexId()
+        } else {
+            activeComplexId = await getFirstComplexId()
+        }
+    }
 
     let query = supabase
         .from("complexes")
@@ -64,6 +82,42 @@ export async function getRegisteredComplexes(): Promise<RegisteredComplex[]> {
     }
 
     return data || []
+}
+
+export async function getManageableComplexes(): Promise<RegisteredComplex[]> {
+    const user = await requireAdmin()
+    const supabase = await createClient()
+
+    if (user.role === "superadmin") {
+        return getRegisteredComplexes()
+    }
+
+    const { data, error } = await supabase
+        .from("complex_admins")
+        .select(`
+            complexes (
+                id,
+                name,
+                app_name,
+                logo_url,
+                description,
+                address,
+                latitude,
+                longitude,
+                map_marker_icon
+            )
+        `)
+        .eq("user_id", user.id)
+
+    if (error) {
+        console.error("Error fetching manageable complexes:", error)
+        return []
+    }
+
+    return (data || [])
+        .map((assignment) => assignment.complexes)
+        .filter((complex): complex is RegisteredComplex => Boolean(complex))
+        .sort((a, b) => a.name.localeCompare(b.name))
 }
 
 async function getFirstComplexId() {
@@ -107,8 +161,20 @@ async function getValidComplexIdFromCookies(cookieNames: string[]) {
 }
 
 export async function getAdminActiveComplexId(): Promise<string | null> {
-    return await getValidComplexIdFromCookies([ADMIN_ACTIVE_COMPLEX_COOKIE, LEGACY_ACTIVE_COMPLEX_COOKIE])
-        || await getFirstComplexId()
+    const user = await requireAdmin()
+    const manageableComplexes = await getManageableComplexes()
+    const manageableIds = new Set(manageableComplexes.map((complex) => complex.id))
+    const selectedComplexId = await getValidComplexIdFromCookies([ADMIN_ACTIVE_COMPLEX_COOKIE, LEGACY_ACTIVE_COMPLEX_COOKIE])
+
+    if (selectedComplexId && manageableIds.has(selectedComplexId)) {
+        return selectedComplexId
+    }
+
+    if (user.role === "superadmin") {
+        return manageableComplexes[0]?.id || await getFirstComplexId()
+    }
+
+    return manageableComplexes[0]?.id || null
 }
 
 export async function getUserActiveComplexId(): Promise<string | null> {
@@ -117,7 +183,20 @@ export async function getUserActiveComplexId(): Promise<string | null> {
 }
 
 export async function getActiveComplexId(): Promise<string | null> {
-    return getAdminActiveComplexId()
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) return getFirstComplexId()
+
+    const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle()
+
+    return profile?.role === "superadmin" || profile?.role === "complex_admin"
+        ? getAdminActiveComplexId()
+        : getUserActiveComplexId()
 }
 
 export async function setActiveComplex(formData: FormData) {
@@ -129,15 +208,10 @@ export async function setActiveComplex(formData: FormData) {
         return { error: "Selecciona un complejo." }
     }
 
-    const supabase = await createClient()
-    const { data, error } = await supabase
-        .from("complexes")
-        .select("id")
-        .eq("id", complexId)
-        .maybeSingle()
+    const manageableComplexes = await getManageableComplexes()
 
-    if (error || !data) {
-        return { error: "El complejo seleccionado no existe." }
+    if (!manageableComplexes.some((complex) => complex.id === complexId)) {
+        return { error: "No tenes permisos para administrar ese complejo." }
     }
 
     const cookieStore = await cookies()
@@ -211,7 +285,7 @@ export async function selectActiveComplexAndRedirect(formData: FormData) {
 }
 
 export async function updateComplexBranding(formData: FormData) {
-    await requireAdmin()
+    const user = await requireAdmin()
 
     const supabase = await createClient()
 
@@ -248,6 +322,17 @@ export async function updateComplexBranding(formData: FormData) {
 
     if (duplicateComplex) {
         return { error: "Ya existe un complejo con ese nombre." }
+    }
+
+    if (!id && user.role !== "superadmin") {
+        return { error: "Solo el superadministrador puede crear complejos." }
+    }
+
+    if (id && user.role !== "superadmin") {
+        const manageableComplexes = await getManageableComplexes()
+        if (!manageableComplexes.some((complex) => complex.id === id)) {
+            return { error: "No tenes permisos para modificar este complejo." }
+        }
     }
 
     const payload = {
@@ -290,4 +375,23 @@ export async function updateComplexBranding(formData: FormData) {
     revalidatePath("/turnos")
 
     return { success: true, id: result.data?.id }
+}
+
+export async function deleteComplex(formData: FormData) {
+    await requireSuperAdmin()
+
+    const complexId = (formData.get("complexId") as string | null)?.trim()
+    if (!complexId) return { error: "Falta el complejo." }
+
+    const supabase = await createClient()
+    const { error } = await supabase.from("complexes").delete().eq("id", complexId)
+
+    if (error) {
+        console.error("Error deleting complex:", error)
+        return { error: "No se pudo eliminar el complejo." }
+    }
+
+    revalidatePath("/configuracion")
+    revalidatePath("/seleccionar-complejo")
+    return { success: true }
 }

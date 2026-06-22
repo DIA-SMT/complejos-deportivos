@@ -1,5 +1,5 @@
 import { requireAdmin } from "@/app/actions/auth"
-import { getActiveComplexId, getComplexBranding, getNewComplexBranding, getRegisteredComplexes } from "@/app/actions/complex-settings"
+import { getActiveComplexId, getComplexBranding, getManageableComplexes, getNewComplexBranding } from "@/app/actions/complex-settings"
 import { getCourts, getSports } from "@/app/actions/facilities"
 import Link from "next/link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,11 +14,11 @@ export default async function ConfiguracionPage({
 }: {
     searchParams?: Promise<{ complexId?: string; new?: string; error?: string }>
 }) {
-    await requireAdmin()
+    const user = await requireAdmin()
     const params = await searchParams
-    const complexes = await getRegisteredComplexes()
+    const complexes = await getManageableComplexes()
     const activeComplexId = await getActiveComplexId()
-    const isNewComplex = params?.new === "1"
+    const isNewComplex = params?.new === "1" && user.role === "superadmin"
     const selectedComplexId = isNewComplex ? null : params?.complexId || activeComplexId || complexes[0]?.id || null
     const [branding, sports, courts] = await Promise.all([
         isNewComplex ? getNewComplexBranding() : getComplexBranding(selectedComplexId),
@@ -61,12 +61,14 @@ export default async function ConfiguracionPage({
                                 </Link>
                             </Button>
                         ))}
-                        <Button asChild variant={isNewComplex ? "default" : "secondary"}>
-                            <Link href="/configuracion?new=1">Nuevo complejo</Link>
-                        </Button>
+                        {user.role === "superadmin" ? (
+                            <Button asChild variant={isNewComplex ? "default" : "secondary"}>
+                                <Link href="/configuracion?new=1">Nuevo complejo</Link>
+                            </Button>
+                        ) : null}
                     </div>
 
-                    <ComplexBrandingForm branding={branding} />
+                    <ComplexBrandingForm key={branding.id || "new-complex"} branding={branding} />
 
                     <div className="border-t pt-8">
                         <div className="mb-5">
@@ -81,9 +83,11 @@ export default async function ConfiguracionPage({
                             </div>
                         ) : (
                             <FacilitiesSettings
+                                key={selectedComplexId}
                                 sports={sports}
                                 courts={courts}
                                 selectedComplexId={selectedComplexId}
+                                canManageSports={user.role === "superadmin"}
                             />
                         )}
                     </div>

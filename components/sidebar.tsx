@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home, Building2, IdCard } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home, Building2, IdCard, UserCog } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -14,9 +14,10 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     branding: ComplexBranding
     canManageSettings?: boolean
     canManageOperations?: boolean
+    canManageAdmins?: boolean
 }
 
-export function Sidebar({ className, branding, canManageSettings = false, canManageOperations = false }: SidebarProps) {
+export function Sidebar({ className, branding, canManageSettings = false, canManageOperations = false, canManageAdmins = false }: SidebarProps) {
     const { isCollapsed, toggleSidebar, setIsMobileOpen } = useSidebar()
 
     const handleLinkClick = () => {
@@ -186,6 +187,21 @@ export function Sidebar({ className, branding, canManageSettings = false, canMan
                                 >
                                     <Settings className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                     <span className={cn(isCollapsed && "md:hidden")}>Configuracion</span>
+                                </Button>
+                            </Link>
+                        )}
+                        {canManageAdmins && (
+                            <Link href="/administradores" onClick={handleLinkClick}>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full border-dashed",
+                                        isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                    )}
+                                    title={isCollapsed ? "Administradores" : undefined}
+                                >
+                                    <UserCog className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                    <span className={cn(isCollapsed && "md:hidden")}>Administradores</span>
                                 </Button>
                             </Link>
                         )}

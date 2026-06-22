@@ -62,7 +62,13 @@ export default async function MiPerfilPage() {
                                 </div>
                                 <div>
                                     <p className="text-muted-foreground">Tipo de cuenta</p>
-                                    <p className="font-medium">{user.role === "admin" ? "Administrador" : "Usuario"}</p>
+                                    <p className="font-medium">
+                                        {user.role === "superadmin"
+                                            ? "Superadministrador"
+                                            : user.role === "complex_admin"
+                                                ? "Administrador de complejo"
+                                                : "Usuario"}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>
@@ -92,9 +98,11 @@ export default async function MiPerfilPage() {
                                 <Button asChild>
                                     <Link href="/complejo">Ver complejo elegido</Link>
                                 </Button>
-                                {user.role === "admin" ? (
+                                {user.role === "superadmin" || user.role === "complex_admin" ? (
                                     <Button asChild variant="secondary">
-                                        <Link href="/seleccionar-complejo">Panel admin</Link>
+                                        <Link href={user.role === "superadmin" ? "/turnos" : "/seleccionar-complejo"}>
+                                            Panel admin
+                                        </Link>
                                     </Button>
                                 ) : null}
                             </CardContent>

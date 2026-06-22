@@ -288,7 +288,7 @@ export async function getCredentialByCode(code: string): Promise<CredentialWithM
         .eq("id", user.id)
         .maybeSingle()
 
-    if (profile?.role !== "admin") return null
+    if (profile?.role !== "superadmin" && profile?.role !== "complex_admin") return null
 
     const { data: adminCredential, error: adminCredentialError } = await supabase
         .from("member_credentials")
@@ -431,18 +431,17 @@ export async function createMemberWithCredential(formData: FormData) {
         return { error: "Ya existe un socio con ese DNI en este complejo." }
     }
 
-    const { data: linkedProfile } = email
-        ? await supabase
-            .from("user_profiles")
-            .select("id")
-            .ilike("email", email)
-            .maybeSingle()
+    const { data: linkedProfileId } = email
+        ? await supabase.rpc("find_user_profile_for_complex", {
+            p_email: email,
+            p_complex_id: activeComplexId,
+        })
         : { data: null }
 
     const { data: member, error: memberError } = await supabase
         .from("members")
         .insert({
-            user_id: linkedProfile?.id || null,
+            user_id: linkedProfileId || null,
             complex_id: activeComplexId,
             first_name: firstName,
             last_name: lastName,

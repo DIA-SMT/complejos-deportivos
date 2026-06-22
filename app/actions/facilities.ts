@@ -1,9 +1,9 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
-import { requireAdmin } from "@/app/actions/auth"
+import { requireAdmin, requireSuperAdmin } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
-import { getActiveComplexId } from "@/app/actions/complex-settings"
+import { getActiveComplexId, getManageableComplexes } from "@/app/actions/complex-settings"
 
 export type Sport = {
     id: string
@@ -25,6 +25,11 @@ export type Court = {
 }
 
 const fallbackSports = ["Futbol", "Voley", "Basket", "Gimnasia", "Padel", "Natacion"]
+
+async function canManageComplex(complexId: string) {
+    const manageableComplexes = await getManageableComplexes()
+    return manageableComplexes.some((complex) => complex.id === complexId)
+}
 
 export async function getSports(): Promise<Sport[]> {
     const supabase = await createClient()
@@ -77,8 +82,28 @@ export async function getCourts(options?: { includeAll?: boolean; complexId?: st
     })) as Court[]
 }
 
+export async function getPublicCourts(): Promise<Court[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("courts")
+        .select("*, complexes(name), sports(id, name)")
+        .not("complex_id", "is", null)
+        .order("name", { ascending: true })
+
+    if (error) {
+        console.error("Error fetching public courts:", error)
+        return []
+    }
+
+    return (data || []).map((court) => ({
+        ...court,
+        icon_url: "icon_url" in court ? court.icon_url : null,
+        sports: Array.isArray(court.sports) ? court.sports[0] || null : court.sports,
+    })) as Court[]
+}
+
 export async function createSport(formData: FormData) {
-    await requireAdmin()
+    await requireSuperAdmin()
 
     const name = (formData.get("name") as string | null)?.trim()
     const iconUrl = (formData.get("iconUrl") as string | null)?.trim()
@@ -112,18 +137,32 @@ export async function createSport(formData: FormData) {
 }
 
 export async function deleteSport(id: string) {
-    await requireAdmin()
+    return deleteSports([id])
+}
+
+export async function deleteSports(ids: string[]) {
+    await requireSuperAdmin()
+
+    const sportIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))]
+    if (!sportIds.length) {
+        return { error: "Selecciona al menos un deporte." }
+    }
 
     const supabase = await createClient()
-    const { error } = await supabase.from("sports").delete().eq("id", id)
+    const { error } = await supabase.from("sports").delete().in("id", sportIds)
 
     if (error) {
-        console.error("Error deleting sport:", error)
-        return { error: "No se pudo eliminar el deporte" }
+        console.error("Error deleting sports:", error)
+        if (error.code === "23503") {
+            return {
+                error: "No se pueden eliminar los deportes seleccionados porque alguno tiene canchas, reservas u otros registros asociados.",
+            }
+        }
+        return { error: `No se pudieron eliminar los deportes: ${error.message}` }
     }
 
     revalidateFacilities()
-    return { success: true }
+    return { success: true, deletedCount: sportIds.length }
 }
 
 export async function createCourt(formData: FormData) {
@@ -145,6 +184,10 @@ export async function createCourt(formData: FormData) {
 
     if (!selectedComplexId) {
         return { error: "Selecciona un complejo antes de cargar una cancha." }
+    }
+
+    if (!await canManageComplex(selectedComplexId)) {
+        return { error: "No tenes permisos para administrar las canchas de ese complejo." }
     }
 
     const { data: sport, error: sportError } = await supabase
@@ -191,19 +234,140 @@ export async function createCourt(formData: FormData) {
     return { success: true }
 }
 
-export async function deleteCourt(id: string) {
+export async function updateCourt(formData: FormData) {
     await requireAdmin()
 
-    const supabase = await createClient()
-    const { error } = await supabase.from("courts").delete().eq("id", id)
+    const id = (formData.get("id") as string | null)?.trim()
+    const name = (formData.get("name") as string | null)?.trim()
+    const type = (formData.get("type") as string | null)?.trim()
+    const sportId = (formData.get("sportId") as string | null)?.trim()
+    const iconUrl = (formData.get("iconUrl") as string | null)?.trim()
+    const expectedComplexId = (formData.get("complexId") as string | null)?.trim()
 
-    if (error) {
-        console.error("Error deleting court:", error)
-        return { error: "No se pudo eliminar la cancha" }
+    if (!id || !name || !sportId || !expectedComplexId) {
+        return { error: "El nombre y el deporte de la cancha son requeridos." }
+    }
+
+    const supabase = await createClient()
+    const { data: court, error: courtError } = await supabase
+        .from("courts")
+        .select("id, complex_id")
+        .eq("id", id)
+        .maybeSingle()
+
+    if (courtError || !court?.complex_id) {
+        return { error: "La cancha seleccionada no existe." }
+    }
+
+    if (court.complex_id !== expectedComplexId) {
+        return { error: "La cancha no pertenece al complejo que estas configurando. Actualiza la pagina." }
+    }
+
+    if (!await canManageComplex(court.complex_id)) {
+        return { error: "No tenes permisos para modificar esta cancha." }
+    }
+
+    const { data: sport, error: sportError } = await supabase
+        .from("sports")
+        .select("id, name")
+        .eq("id", sportId)
+        .maybeSingle()
+
+    if (sportError || !sport) {
+        return { error: "El deporte seleccionado no existe." }
+    }
+
+    const updates = {
+        name,
+        type: type || sport.name,
+        sport_id: sport.id,
+        icon_url: iconUrl || null,
+    }
+    const { error } = await supabase
+        .from("courts")
+        .update(updates)
+        .eq("id", id)
+        .eq("complex_id", court.complex_id)
+
+    if (error?.message.includes("Could not find the 'icon_url' column")) {
+        const { error: retryError } = await supabase
+            .from("courts")
+            .update({
+                name,
+                type: type || sport.name,
+                sport_id: sport.id,
+            })
+            .eq("id", id)
+            .eq("complex_id", court.complex_id)
+
+        if (retryError) {
+            return { error: `No se pudo actualizar la cancha: ${retryError.message}` }
+        }
+    } else if (error) {
+        return { error: `No se pudo actualizar la cancha: ${error.message}` }
     }
 
     revalidateFacilities()
     return { success: true }
+}
+
+export async function deleteCourt(id: string) {
+    await requireAdmin()
+    const supabase = await createClient()
+    const { data: court } = await supabase
+        .from("courts")
+        .select("complex_id")
+        .eq("id", id)
+        .maybeSingle()
+
+    return deleteCourts([id], court?.complex_id)
+}
+
+export async function deleteCourts(ids: string[], expectedComplexId?: string | null) {
+    await requireAdmin()
+
+    const courtIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))]
+    const selectedComplexId = expectedComplexId?.trim()
+    if (!courtIds.length || !selectedComplexId) {
+        return { error: "Selecciona al menos una cancha." }
+    }
+
+    const supabase = await createClient()
+    const { data: courts, error: courtsError } = await supabase
+        .from("courts")
+        .select("id, complex_id")
+        .in("id", courtIds)
+
+    if (courtsError || !courts || courts.length !== courtIds.length) {
+        return { error: "No se pudieron validar todas las canchas seleccionadas." }
+    }
+
+    if (courts.some((court) => court.complex_id !== selectedComplexId)) {
+        return {
+            error: "La seleccion contiene canchas de otro complejo. Actualiza la pagina antes de eliminar.",
+        }
+    }
+
+    const manageableComplexes = await getManageableComplexes()
+    const manageableIds = new Set(manageableComplexes.map((complex) => complex.id))
+    if (courts.some((court) => !court.complex_id || !manageableIds.has(court.complex_id))) {
+        return { error: "No tenes permisos para eliminar alguna de las canchas seleccionadas." }
+    }
+
+    const { error } = await supabase.from("courts").delete().in("id", courtIds)
+
+    if (error) {
+        console.error("Error deleting courts:", error)
+        if (error.code === "23503") {
+            return {
+                error: "No se pueden eliminar las canchas seleccionadas porque alguna tiene horarios, turnos o reservas asociados.",
+            }
+        }
+        return { error: `No se pudieron eliminar las canchas: ${error.message}` }
+    }
+
+    revalidateFacilities()
+    return { success: true, deletedCount: courtIds.length }
 }
 
 function revalidateFacilities() {

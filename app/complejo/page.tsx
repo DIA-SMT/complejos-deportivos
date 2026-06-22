@@ -1,6 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
-import { Building2, Clock, Dumbbell, LogOut, MapPin, User, Users } from "lucide-react"
+import { Building2, Clock, Dumbbell, IdCard, LogOut, MapPin, User, Users } from "lucide-react"
 import { logout, requireAuth } from "@/app/actions/auth"
 import { getComplexPublicOverview } from "@/app/actions/complex-public-overview"
 import { getMyCredentialForActiveComplex, getMyPendingMembershipRequestForActiveComplex } from "@/app/actions/memberships"
@@ -69,6 +69,14 @@ export default async function ComplejoPage() {
                     </Link>
 
                     <div className="flex items-center gap-2">
+                        {myCredential ? (
+                            <Button asChild variant="ghost" size="sm">
+                                <Link href="#mi-carnet">
+                                    <IdCard className="h-4 w-4" />
+                                    <span className="hidden sm:inline">Mi credencial</span>
+                                </Link>
+                            </Button>
+                        ) : null}
                         <Button asChild variant="ghost" size="sm">
                             <Link href="/mi-perfil">Mi perfil</Link>
                         </Button>
@@ -271,7 +279,7 @@ export default async function ComplejoPage() {
                     </Card>
                 </div>
 
-                <Card>
+                <Card id="mis-reservas" className="scroll-mt-24">
                     <CardHeader>
                         <CardTitle>Mis reservas</CardTitle>
                         <CardDescription>
@@ -283,7 +291,7 @@ export default async function ComplejoPage() {
                     </CardContent>
                 </Card>
 
-                <Card>
+                <Card id="mi-carnet" className="scroll-mt-24">
                     <CardHeader>
                         <CardTitle>Mi carnet de socio</CardTitle>
                         <CardDescription>
@@ -329,7 +337,11 @@ export default async function ComplejoPage() {
                                     <p className="font-semibold">Perfil</p>
                                     <p className="mt-1 truncate text-sm text-muted-foreground">{user.email}</p>
                                     <p className="mt-1 text-xs text-muted-foreground">
-                                        {user.role === "admin" ? "Administrador" : "Usuario"}
+                                        {user.role === "superadmin"
+                                            ? "Superadministrador"
+                                            : user.role === "complex_admin"
+                                                ? "Administrador de complejo"
+                                                : "Usuario"}
                                     </p>
                                 </div>
                             </div>

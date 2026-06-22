@@ -2,7 +2,7 @@ import Image from "next/image"
 import Link from "next/link"
 import { Building2 } from "lucide-react"
 import { requireAdmin } from "@/app/actions/auth"
-import { getActiveComplexId, getRegisteredComplexes, selectActiveComplexAndRedirect } from "@/app/actions/complex-settings"
+import { getActiveComplexId, getManageableComplexes, selectActiveComplexAndRedirect } from "@/app/actions/complex-settings"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
@@ -13,10 +13,10 @@ export default async function SeleccionarComplejoPage({
 }: {
     searchParams?: Promise<{ error?: string }>
 }) {
-    await requireAdmin()
+    const user = await requireAdmin()
     const params = await searchParams
     const [complexes, activeComplexId] = await Promise.all([
-        getRegisteredComplexes(),
+        getManageableComplexes(),
         getActiveComplexId(),
     ])
 
@@ -79,9 +79,11 @@ export default async function SeleccionarComplejoPage({
                         </div>
                     )}
 
-                    <Button asChild variant="outline">
-                        <Link href="/configuracion?new=1">Crear nuevo complejo</Link>
-                    </Button>
+                    {user.role === "superadmin" ? (
+                        <Button asChild variant="outline">
+                            <Link href="/configuracion?new=1">Crear nuevo complejo</Link>
+                        </Button>
+                    ) : null}
                 </CardContent>
             </Card>
         </main>

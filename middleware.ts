@@ -38,6 +38,7 @@ export async function middleware(request: NextRequest) {
     const isPublicCredentialRoute = request.nextUrl.pathname.startsWith('/credencial/')
     const isPublicRoute = isLoginPage || isPublicCredentialRoute || publicRoutes.includes(request.nextUrl.pathname)
     const adminRoutes = ['/seleccionar-complejo', '/configuracion', '/profesores', '/inventario', '/turnos', '/reportes', '/socios']
+    const superadminRoutes = ['/administradores']
     const isAdminRoute = adminRoutes.some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`))
 
     if (isLoginPage && user) {
@@ -48,7 +49,12 @@ export async function middleware(request: NextRequest) {
             .single()
 
         if (profile) {
-            return NextResponse.redirect(new URL(profile.role === 'admin' ? '/seleccionar-complejo' : '/', request.url))
+            const destination = profile.role === 'superadmin'
+                ? '/turnos'
+                : profile.role === 'complex_admin'
+                    ? '/seleccionar-complejo'
+                    : '/'
+            return NextResponse.redirect(new URL(destination, request.url))
         }
     }
 
@@ -63,8 +69,20 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single()
 
-        if (profile?.role !== 'admin') {
+        if (profile?.role !== 'superadmin' && profile?.role !== 'complex_admin') {
             return NextResponse.redirect(new URL('/', request.url))
+        }
+    }
+
+    if (user && superadminRoutes.some((route) => request.nextUrl.pathname === route || request.nextUrl.pathname.startsWith(`${route}/`))) {
+        const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('role')
+            .eq('id', user.id)
+            .single()
+
+        if (profile?.role !== 'superadmin') {
+            return NextResponse.redirect(new URL('/complejo', request.url))
         }
     }
 
@@ -75,7 +93,7 @@ export async function middleware(request: NextRequest) {
             .eq('id', user.id)
             .single()
 
-        if (profile?.role !== 'admin') {
+        if (profile?.role !== 'superadmin' && profile?.role !== 'complex_admin') {
             return NextResponse.redirect(new URL('/mi-perfil', request.url))
         }
     }

@@ -2,8 +2,9 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowRight, Building2, CalendarDays, MessageCircle, ShieldCheck } from "lucide-react"
 import { getRegisteredComplexes } from "@/app/actions/complex-settings"
-import { getCourts, getSports } from "@/app/actions/facilities"
+import { getPublicCourts, getSports } from "@/app/actions/facilities"
 import { LandingAvailabilityExplorer } from "@/components/public/landing-availability-explorer"
+import { LandingAccountMenu } from "@/components/public/landing-account-menu"
 import { SportsParallaxBackground } from "@/components/public/sports-parallax-background"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -16,7 +17,7 @@ export default async function Home() {
   const [complexes, sports, courts] = await Promise.all([
     getRegisteredComplexes(),
     getSports(),
-    getCourts({ includeAll: true }),
+    getPublicCourts(),
   ])
   const { data: { user } } = await supabase.auth.getUser()
   const { data: profile } = user
@@ -28,9 +29,6 @@ export default async function Home() {
     : { data: null }
 
   const featuredComplexes = complexes.slice(0, 6)
-  const accountHref = !user ? "/login" : profile?.role === "admin" ? "/seleccionar-complejo" : "/elegir-complejo"
-  const accountLabel = !user ? "Ingresar" : profile?.role === "admin" ? "Panel admin" : "Elegir complejo"
-
   return (
     <main className="min-h-screen bg-background text-foreground">
       <section className="relative min-h-[92vh] overflow-hidden">
@@ -44,7 +42,7 @@ export default async function Home() {
         <div className="absolute inset-0 bg-black/60" />
         <SportsParallaxBackground />
 
-        <header className="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-5 py-5 text-white">
+        <header className="relative z-[60] mx-auto flex max-w-7xl items-center justify-between gap-3 px-5 py-5 text-white">
           <Link href="/" className="flex items-center gap-3">
             <Image
               src="/logoMuni-sm.png"
@@ -59,15 +57,17 @@ export default async function Home() {
             </div>
           </Link>
 
-          <nav className="hidden items-center gap-6 text-sm md:flex">
-            <a href="#complejos" className="text-white/80 hover:text-white">Complejos</a>
-            <a href="#actividades" className="text-white/80 hover:text-white">Deportes</a>
-            <a href="#espacios" className="text-white/80 hover:text-white">Canchas</a>
-            <Link href={accountHref} className="text-white/80 hover:text-white">{accountLabel}</Link>
-            <Button asChild size="sm" className="bg-white text-black hover:bg-white/90">
-              <Link href="/reservar">Solicitar turno</Link>
-            </Button>
-          </nav>
+          <div className="flex items-center gap-3">
+            <nav className="hidden items-center gap-6 text-sm md:flex">
+              <a href="#complejos" className="text-white/80 hover:text-white">Complejos</a>
+              <a href="#actividades" className="text-white/80 hover:text-white">Deportes</a>
+              <a href="#espacios" className="text-white/80 hover:text-white">Canchas</a>
+              <Button asChild size="sm" className="bg-white text-black hover:bg-white/90">
+                <Link href="/reservar">Solicitar turno</Link>
+              </Button>
+            </nav>
+            <LandingAccountMenu email={user?.email} role={profile?.role} />
+          </div>
         </header>
 
         <div className="relative z-10 mx-auto flex min-h-[calc(92vh-92px)] max-w-7xl flex-col justify-center px-5 pb-20 text-white">
@@ -113,7 +113,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 h-52 bg-gradient-to-b from-transparent via-background/75 to-background" />
+        <div className="pointer-events-none absolute inset-x-0 -bottom-px z-30 h-28 bg-gradient-to-b from-transparent via-background/35 to-background sm:h-36" />
       </section>
 
       <section id="complejos" className="mx-auto max-w-7xl px-5 py-16">

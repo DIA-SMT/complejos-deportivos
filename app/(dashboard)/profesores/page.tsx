@@ -36,7 +36,7 @@ export default async function ProfesoresPage() {
         getCourts(),
     ]);
     const professors = professorsData as unknown as ProfessorWithSchedules[];
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'superadmin' || user?.role === 'complex_admin';
 
     const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const sports = sportsData.map((sport) => sport.name);

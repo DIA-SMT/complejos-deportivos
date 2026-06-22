@@ -3,7 +3,7 @@
 import { createClient } from "@/utils/supabase/server"
 import { redirect } from "next/navigation"
 
-export type UserRole = 'common' | 'admin'
+export type UserRole = 'common' | 'complex_admin' | 'superadmin'
 
 export interface UserProfile {
     id: string
@@ -73,7 +73,7 @@ export async function getCurrentUser() {
  */
 export async function isAdmin(): Promise<boolean> {
     const user = await getCurrentUser()
-    return user?.role === 'admin'
+    return user?.role === 'complex_admin' || user?.role === 'superadmin'
 }
 
 /**
@@ -95,10 +95,20 @@ export async function requireAuth(): Promise<UserProfile> {
 export async function requireAdmin(): Promise<UserProfile> {
     const user = await requireAuth()
     
-    if (user.role !== 'admin') {
+    if (user.role !== 'complex_admin' && user.role !== 'superadmin') {
         redirect('/complejo')
     }
     
+    return user
+}
+
+export async function requireSuperAdmin(): Promise<UserProfile> {
+    const user = await requireAuth()
+
+    if (user.role !== 'superadmin') {
+        redirect('/complejo')
+    }
+
     return user
 }
 

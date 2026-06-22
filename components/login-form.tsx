@@ -30,7 +30,13 @@ export function LoginForm({ branding }: { branding: ComplexBranding }) {
             .select("role")
             .single()
 
-        router.push(profile?.role === "admin" ? "/seleccionar-complejo" : "/")
+        router.push(
+            profile?.role === "superadmin"
+                ? "/turnos"
+                : profile?.role === "complex_admin"
+                    ? "/seleccionar-complejo"
+                    : "/"
+        )
         router.refresh()
     }
 

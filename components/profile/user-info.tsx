@@ -1,14 +1,16 @@
 "use client"
 
-import { UserProfile } from "@/app/actions/auth"
+import type { UserProfile } from "@/app/actions/auth"
 import { Badge } from "@/components/ui/badge"
-import { User, Mail, Shield } from "lucide-react"
+import { Mail, Shield, User } from "lucide-react"
 
-interface UserInfoProps {
-    user: UserProfile
+function roleLabel(role: UserProfile["role"]) {
+    if (role === "superadmin") return "Superadministrador"
+    if (role === "complex_admin") return "Administrador de complejo"
+    return "Usuario común"
 }
 
-export function UserInfo({ user }: UserInfoProps) {
+export function UserInfo({ user }: { user: UserProfile }) {
     return (
         <div className="space-y-4">
             <div className="flex items-center gap-3">
@@ -17,11 +19,8 @@ export function UserInfo({ user }: UserInfoProps) {
                 </div>
                 <div className="flex-1">
                     <p className="font-semibold">{user.email}</p>
-                    <Badge 
-                        variant={user.role === 'admin' ? 'default' : 'secondary'} 
-                        className="mt-1"
-                    >
-                        {user.role === 'admin' ? 'Administrador' : 'Usuario'}
+                    <Badge variant={user.role !== "common" ? "default" : "secondary"} className="mt-1">
+                        {roleLabel(user.role)}
                     </Badge>
                 </div>
             </div>
@@ -38,11 +37,10 @@ export function UserInfo({ user }: UserInfoProps) {
                     <Shield className="h-4 w-4 text-muted-foreground" />
                     <div>
                         <p className="text-muted-foreground">Rol</p>
-                        <p className="font-medium capitalize">{user.role === 'admin' ? 'Administrador' : 'Usuario común'}</p>
+                        <p className="font-medium">{roleLabel(user.role)}</p>
                     </div>
                 </div>
             </div>
         </div>
     )
 }
-

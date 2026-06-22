@@ -1,7 +1,6 @@
 import { SidebarProvider } from "@/components/sidebar-context"
 import { DashboardContent } from "./dashboard-content"
 import { getCurrentUser } from "@/app/actions/auth"
-import { Chatbot } from "@/components/chatbot/chatbot"
 import { getComplexBranding } from "@/app/actions/complex-settings"
 
 export default async function DashboardLayout({
@@ -17,7 +16,6 @@ export default async function DashboardLayout({
     return (
         <SidebarProvider>
             <DashboardContent user={user} branding={branding}>{children}</DashboardContent>
-            <Chatbot />
         </SidebarProvider>
     )
 }

@@ -19,7 +19,7 @@ import type { Tables } from "@/types/database.types";
 export default async function InventarioPage() {
     const inventory = (await getInventory()) as Tables<"inventory">[];
     const user = await getCurrentUser();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'superadmin' || user?.role === 'complex_admin';
 
     return (
         <div className="flex flex-col space-y-6">

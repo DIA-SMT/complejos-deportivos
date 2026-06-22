@@ -124,6 +124,49 @@ export type Database = {
                 }
                 Relationships: []
             }
+            complex_admins: {
+                Row: {
+                    user_id: string
+                    complex_id: string
+                    created_at: string
+                    created_by: string | null
+                }
+                Insert: {
+                    user_id: string
+                    complex_id: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Update: {
+                    user_id?: string
+                    complex_id?: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "complex_admins_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_admins_created_by_fkey"
+                        columns: ["created_by"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_admins_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
 
             courts: {
                 Row: {
@@ -684,6 +727,13 @@ export type Database = {
                     p_notes: string | null
                 }
                 Returns: string
+            }
+            find_user_profile_for_complex: {
+                Args: {
+                    p_email: string
+                    p_complex_id: string
+                }
+                Returns: string | null
             }
             get_public_credential_validation: {
                 Args: {
