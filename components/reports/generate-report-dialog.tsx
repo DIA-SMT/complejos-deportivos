@@ -26,9 +26,27 @@ import { toast } from "sonner"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
+type ReportScheduleOption = {
+    id: string
+    sport: string
+    professors: { full_name: string } | null
+}
+
+type ReportPdfRow = {
+    date: string
+    attendance: number | null
+    notes: string | null
+    professor_schedules: {
+        sport: string
+        start_time: string
+        end_time: string
+        professors: { full_name: string } | null
+    } | null
+}
+
 interface GenerateReportDialogProps {
-    schedules: any[]
-    reports: any[]
+    schedules: ReportScheduleOption[]
+    reports: ReportPdfRow[]
 }
 
 export function GenerateReportDialog({ schedules, reports }: GenerateReportDialogProps) {
@@ -37,8 +55,8 @@ export function GenerateReportDialog({ schedules, reports }: GenerateReportDialo
     const [selectedClass, setSelectedClass] = useState<string>("all")
 
     // Get unique classes for the dropdown
-    const uniqueClasses = schedules.reduce((acc: any[], schedule) => {
-        const key = `${schedule.sport} - ${schedule.professors.full_name}`
+    const uniqueClasses = schedules.reduce<(ReportScheduleOption & { key: string })[]>((acc, schedule) => {
+        const key = `${schedule.sport} - ${schedule.professors?.full_name || "Sin profesor"}`
         if (!acc.find(item => item.key === key)) {
             acc.push({ ...schedule, key })
         }
@@ -52,7 +70,7 @@ export function GenerateReportDialog({ schedules, reports }: GenerateReportDialo
             const filteredReports = selectedClass === "all"
                 ? reports
                 : reports.filter(report => {
-                    const key = `${report.professor_schedules.sport} - ${report.professor_schedules.professors.full_name}`
+                    const key = `${report.professor_schedules?.sport || "Sin clase"} - ${report.professor_schedules?.professors?.full_name || "Sin profesor"}`
                     return key === selectedClass
                 })
 
@@ -78,8 +96,8 @@ export function GenerateReportDialog({ schedules, reports }: GenerateReportDialo
             const tableData = filteredReports.map(report => [
                 format(new Date(report.date), "dd/MM/yyyy"),
                 format(new Date(report.date), "EEEE", { locale: es }),
-                `${report.professor_schedules.sport} (${report.professor_schedules.start_time.slice(0, 5)} - ${report.professor_schedules.end_time.slice(0, 5)})`,
-                report.professor_schedules.professors.full_name,
+                `${report.professor_schedules?.sport || "Sin clase"} (${report.professor_schedules?.start_time?.slice(0, 5) || "--:--"} - ${report.professor_schedules?.end_time?.slice(0, 5) || "--:--"})`,
+                report.professor_schedules?.professors?.full_name || "Sin profesor",
                 report.attendance || "-",
                 report.notes || "-"
             ])

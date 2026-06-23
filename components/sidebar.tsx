@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import Image from "next/image"
-import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home } from "lucide-react"
+import { ClipboardList, CalendarDays, Users, ChevronLeft, ChevronRight, User, Settings, Home, Building2, IdCard, UserCog } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -13,9 +13,11 @@ interface SidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     className?: string
     branding: ComplexBranding
     canManageSettings?: boolean
+    canManageOperations?: boolean
+    canManageAdmins?: boolean
 }
 
-export function Sidebar({ className, branding, canManageSettings = false }: SidebarProps) {
+export function Sidebar({ className, branding, canManageSettings = false, canManageOperations = false, canManageAdmins = false }: SidebarProps) {
     const { isCollapsed, toggleSidebar, setIsMobileOpen } = useSidebar()
 
     const handleLinkClick = () => {
@@ -24,7 +26,7 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
     }
 
     return (
-        <div className={cn("pb-4 h-full flex flex-col transition-all duration-300", className)}>
+        <div className={cn("h-full flex flex-col pb-4 text-slate-700 transition-all duration-300 dark:text-slate-200", className)}>
             <div className="space-y-4 py-4 flex-1">
                 <div className="px-3 py-2">
                     {/* Toggle Button - Only show on desktop */}
@@ -49,7 +51,7 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                             <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-muted-foreground uppercase">
                                 
                             </h2>
-                            <h1 className="mb-6 px-4 text-xl font-bold tracking-tight">
+                            <h1 className="mb-6 px-4 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
                                 {branding.appName}
                                 <span className="block text-sm font-normal text-muted-foreground">{branding.displayName}</span>
                             </h1>
@@ -71,7 +73,21 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <span className={cn(isCollapsed && "md:hidden")}>Inicio</span>
                             </Button>
                         </Link>
-                        <Link href="/profesores" onClick={handleLinkClick}>
+                        <Link href="/complejo" onClick={handleLinkClick}>
+                            <Button
+                                variant="ghost"
+                                className={cn(
+                                    "w-full",
+                                    isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                )}
+                                title={isCollapsed ? "Complejo" : undefined}
+                            >
+                                <Building2 className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                <span className={cn(isCollapsed && "md:hidden")}>Complejo</span>
+                            </Button>
+                        </Link>
+                        {canManageOperations && (
+                            <Link href="/profesores" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -83,8 +99,10 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <Users className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Profesores</span>
                             </Button>
-                        </Link>
-                        <Link href="/inventario" onClick={handleLinkClick}>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/inventario" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -96,9 +114,11 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <ClipboardList className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Inventario</span>
                             </Button>
-                        </Link>
+                            </Link>
+                        )}
 
-                        <Link href="/turnos" onClick={handleLinkClick}>
+                        {canManageOperations && (
+                            <Link href="/turnos" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -110,8 +130,10 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <CalendarDays className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Turnos</span>
                             </Button>
-                        </Link>
-                        <Link href="/reportes" onClick={handleLinkClick}>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/reportes" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -123,7 +145,23 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 <ClipboardList className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                 <span className={cn(isCollapsed && "md:hidden")}>Reportes</span>
                             </Button>
-                        </Link>
+                            </Link>
+                        )}
+                        {canManageOperations && (
+                            <Link href="/socios" onClick={handleLinkClick}>
+                                <Button
+                                    variant="ghost"
+                                    className={cn(
+                                        "w-full",
+                                        isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                    )}
+                                    title={isCollapsed ? "Socios" : undefined}
+                                >
+                                    <IdCard className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                    <span className={cn(isCollapsed && "md:hidden")}>Socios</span>
+                                </Button>
+                            </Link>
+                        )}
                         <Link href="/perfil" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
@@ -149,6 +187,21 @@ export function Sidebar({ className, branding, canManageSettings = false }: Side
                                 >
                                     <Settings className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
                                     <span className={cn(isCollapsed && "md:hidden")}>Configuracion</span>
+                                </Button>
+                            </Link>
+                        )}
+                        {canManageAdmins && (
+                            <Link href="/administradores" onClick={handleLinkClick}>
+                                <Button
+                                    variant="outline"
+                                    className={cn(
+                                        "w-full border-dashed",
+                                        isCollapsed ? "md:justify-center md:px-2" : "justify-start"
+                                    )}
+                                    title={isCollapsed ? "Administradores" : undefined}
+                                >
+                                    <UserCog className={cn("h-4 w-4", !isCollapsed && "mr-2")} />
+                                    <span className={cn(isCollapsed && "md:hidden")}>Administradores</span>
                                 </Button>
                             </Link>
                         )}

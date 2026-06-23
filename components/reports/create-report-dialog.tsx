@@ -25,8 +25,14 @@ import { Loader2, Plus } from "lucide-react"
 import { toast } from "sonner"
 import { upsertClassReport } from "@/app/actions/reports"
 
+type ReportScheduleOption = {
+    id: string
+    sport: string
+    professors: { full_name: string } | null
+}
+
 interface CreateReportDialogProps {
-    schedules: any[]
+    schedules: ReportScheduleOption[]
 }
 
 export function CreateReportDialog({ schedules }: CreateReportDialogProps) {
@@ -77,7 +83,7 @@ export function CreateReportDialog({ schedules }: CreateReportDialogProps) {
                                 <SelectContent>
                                     {schedules.map((schedule) => (
                                         <SelectItem key={schedule.id} value={schedule.id}>
-                                            {schedule.sport} - {schedule.professors.full_name}
+                                            {schedule.sport} - {schedule.professors?.full_name || "Sin profesor"}
                                         </SelectItem>
                                     ))}
                                 </SelectContent>

@@ -124,6 +124,92 @@ export type Database = {
                 }
                 Relationships: []
             }
+            complex_admins: {
+                Row: {
+                    user_id: string
+                    complex_id: string
+                    created_at: string
+                    created_by: string | null
+                }
+                Insert: {
+                    user_id: string
+                    complex_id: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Update: {
+                    user_id?: string
+                    complex_id?: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "complex_admins_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_admins_created_by_fkey"
+                        columns: ["created_by"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_admins_user_id_fkey"
+                        columns: ["user_id"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
+            complex_sports: {
+                Row: {
+                    complex_id: string
+                    sport_id: string
+                    created_at: string
+                    created_by: string | null
+                }
+                Insert: {
+                    complex_id: string
+                    sport_id: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Update: {
+                    complex_id?: string
+                    sport_id?: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "complex_sports_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_sports_sport_id_fkey"
+                        columns: ["sport_id"]
+                        isOneToOne: false
+                        referencedRelation: "sports"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_sports_created_by_fkey"
+                        columns: ["created_by"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
 
             courts: {
                 Row: {
@@ -132,6 +218,7 @@ export type Database = {
                     id: string
                     icon_url: string | null
                     name: string
+                    sport_id: string | null
                     type: string | null
                 }
                 Insert: {
@@ -140,6 +227,7 @@ export type Database = {
                     id?: string
                     icon_url?: string | null
                     name: string
+                    sport_id?: string | null
                     type?: string | null
                 }
                 Update: {
@@ -148,6 +236,7 @@ export type Database = {
                     id?: string
                     icon_url?: string | null
                     name?: string
+                    sport_id?: string | null
                     type?: string | null
                 }
                 Relationships: [
@@ -188,6 +277,185 @@ export type Database = {
                 Relationships: [
                     {
                         foreignKeyName: "inventory_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "courts_sport_id_fkey"
+                        columns: ["sport_id"]
+                        isOneToOne: false
+                        referencedRelation: "sports"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            member_credentials: {
+                Row: {
+                    code: string
+                    complex_id: string
+                    created_at: string
+                    enabled_activities: string[]
+                    expires_at: string
+                    id: string
+                    issued_at: string
+                    member_id: string
+                    membership_type: string
+                    status: string
+                    updated_at: string
+                }
+                Insert: {
+                    code: string
+                    complex_id: string
+                    created_at?: string
+                    enabled_activities?: string[]
+                    expires_at: string
+                    id?: string
+                    issued_at?: string
+                    member_id: string
+                    membership_type?: string
+                    status?: string
+                    updated_at?: string
+                }
+                Update: {
+                    code?: string
+                    complex_id?: string
+                    created_at?: string
+                    enabled_activities?: string[]
+                    expires_at?: string
+                    id?: string
+                    issued_at?: string
+                    member_id?: string
+                    membership_type?: string
+                    status?: string
+                    updated_at?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "member_credentials_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "member_credentials_member_id_fkey"
+                        columns: ["member_id"]
+                        isOneToOne: false
+                        referencedRelation: "members"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            members: {
+                Row: {
+                    complex_id: string
+                    created_at: string
+                    dni: string
+                    email: string | null
+                    first_name: string
+                    id: string
+                    last_name: string
+                    notes: string | null
+                    phone: string | null
+                    photo_url: string | null
+                    status: string
+                    updated_at: string
+                    user_id: string | null
+                }
+                Insert: {
+                    complex_id: string
+                    created_at?: string
+                    dni: string
+                    email?: string | null
+                    first_name: string
+                    id?: string
+                    last_name: string
+                    notes?: string | null
+                    phone?: string | null
+                    photo_url?: string | null
+                    status?: string
+                    updated_at?: string
+                    user_id?: string | null
+                }
+                Update: {
+                    complex_id?: string
+                    created_at?: string
+                    dni?: string
+                    email?: string | null
+                    first_name?: string
+                    id?: string
+                    last_name?: string
+                    notes?: string | null
+                    phone?: string | null
+                    photo_url?: string | null
+                    status?: string
+                    updated_at?: string
+                    user_id?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "members_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                ]
+            }
+            membership_requests: {
+                Row: {
+                    complex_id: string
+                    created_at: string
+                    dni: string
+                    email: string
+                    first_name: string
+                    id: string
+                    last_name: string
+                    notes: string | null
+                    phone: string | null
+                    requested_activities: string[]
+                    requested_membership_type: string
+                    status: string
+                    updated_at: string
+                    user_id: string
+                }
+                Insert: {
+                    complex_id: string
+                    created_at?: string
+                    dni: string
+                    email: string
+                    first_name: string
+                    id?: string
+                    last_name: string
+                    notes?: string | null
+                    phone?: string | null
+                    requested_activities?: string[]
+                    requested_membership_type?: string
+                    status?: string
+                    updated_at?: string
+                    user_id: string
+                }
+                Update: {
+                    complex_id?: string
+                    created_at?: string
+                    dni?: string
+                    email?: string
+                    first_name?: string
+                    id?: string
+                    last_name?: string
+                    notes?: string | null
+                    phone?: string | null
+                    requested_activities?: string[]
+                    requested_membership_type?: string
+                    status?: string
+                    updated_at?: string
+                    user_id?: string
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "membership_requests_complex_id_fkey"
                         columns: ["complex_id"]
                         isOneToOne: false
                         referencedRelation: "complexes"
@@ -305,8 +573,10 @@ export type Database = {
                     preferred_date: string
                     preferred_time: string
                     sport: string
+                    sport_id: string | null
                     status: string
                     updated_at: string
+                    user_id: string | null
                 }
                 Insert: {
                     citizen_id: string
@@ -318,8 +588,10 @@ export type Database = {
                     preferred_date: string
                     preferred_time: string
                     sport: string
+                    sport_id?: string | null
                     status?: string
                     updated_at?: string
+                    user_id?: string | null
                 }
                 Update: {
                     citizen_id?: string
@@ -331,8 +603,10 @@ export type Database = {
                     preferred_date?: string
                     preferred_time?: string
                     sport?: string
+                    sport_id?: string | null
                     status?: string
                     updated_at?: string
+                    user_id?: string | null
                 }
                 Relationships: [
                     {
@@ -354,6 +628,13 @@ export type Database = {
                         columns: ["court_id"]
                         isOneToOne: false
                         referencedRelation: "courts"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "reservation_requests_sport_id_fkey"
+                        columns: ["sport_id"]
+                        isOneToOne: false
+                        referencedRelation: "sports"
                         referencedColumns: ["id"]
                     },
                 ]
@@ -469,7 +750,56 @@ export type Database = {
             [_ in never]: never
         }
         Functions: {
-            [_ in never]: never
+            approve_membership_request: {
+                Args: {
+                    p_expires_at: string
+                    p_request_id: string
+                }
+                Returns: string
+            }
+            create_public_reservation_request: {
+                Args: {
+                    p_full_name: string
+                    p_phone: string
+                    p_email: string | null
+                    p_complex_id: string | null
+                    p_sport_id: string
+                    p_court_id: string | null
+                    p_preferred_date: string
+                    p_preferred_time: string
+                    p_notes: string | null
+                }
+                Returns: string
+            }
+            find_user_profile_for_complex: {
+                Args: {
+                    p_email: string
+                    p_complex_id: string
+                }
+                Returns: string | null
+            }
+            get_public_credential_validation: {
+                Args: {
+                    p_code: string
+                }
+                Returns: {
+                    code: string
+                    complex_id: string
+                    complex_logo_url: string | null
+                    complex_name: string
+                    enabled_activities: string[]
+                    expires_at: string
+                    first_name: string
+                    id: string
+                    issued_at: string
+                    last_name: string
+                    masked_dni: string
+                    member_id: string
+                    member_status: string
+                    membership_type: string
+                    status: string
+                }[]
+            }
         }
         Enums: {
             [_ in never]: never

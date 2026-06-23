@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import {
     Card,
     CardContent,
-    CardDescription,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -28,6 +27,17 @@ interface ReportesPageProps {
 
 import { GenerateReportDialog } from "@/components/reports/generate-report-dialog"
 import { CreateReportDialog } from "@/components/reports/create-report-dialog"
+import type { Tables } from "@/types/database.types"
+
+type ReportWithSchedule = Tables<"class_reviews"> & {
+    professor_schedules: {
+        sport: string
+        start_time: string
+        end_time: string
+        professors: { full_name: string } | null
+        courts: { name: string } | null
+    } | null
+}
 
 export default async function ReportesPage({ searchParams }: ReportesPageProps) {
     const params = await searchParams
@@ -83,11 +93,10 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
         console.error("Error fetching reports:", error)
     }
 
-    // Group reports by day
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const reportsByDay: Record<string, any[]> = {}
+    const typedReports = (reports || []) as ReportWithSchedule[]
+    const reportsByDay: Record<string, ReportWithSchedule[]> = {}
 
-    reports?.forEach(report => {
+    typedReports.forEach(report => {
         if (!reportsByDay[report.date]) {
             reportsByDay[report.date] = []
         }
@@ -110,7 +119,7 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+            <div className="group relative mb-8 h-[250px] w-full overflow-hidden rounded-2xl border border-blue-200/20 shadow-[0_20px_50px_rgba(30,64,175,0.18)] animate-fade-in sm:h-[300px]">
                 <div className="absolute inset-0 bg-blue-900/20">
                     <img
                         src="/images/reportes.png"
@@ -132,7 +141,7 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
             </div>
 
             {/* Week Selector */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between bg-card p-4 rounded-lg border shadow-sm gap-4">
+            <div className="flex flex-col items-start justify-between gap-4 rounded-2xl border border-blue-100/80 bg-card/90 p-4 shadow-[0_12px_32px_rgba(51,78,110,0.09)] sm:flex-row sm:items-center dark:border-white/10">
                 <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto">
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/reportes?week=${prevWeek}`}>
@@ -190,7 +199,7 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {reportsByDay[date]?.map((report: any) => (
+                                        {reportsByDay[date]?.map((report) => (
                                             <TableRow key={report.id}>
                                                 <TableCell className="font-medium text-xs sm:text-sm">
                                                     {report.professor_schedules?.start_time?.slice(0, 5)} - {report.professor_schedules?.end_time?.slice(0, 5)}
@@ -211,7 +220,7 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                                                 <TableCell className="hidden lg:table-cell max-w-[300px]">
                                                     {report.notes ? (
                                                         <p className="text-sm text-muted-foreground italic truncate" title={report.notes}>
-                                                            "{report.notes}"
+                                                            &quot;{report.notes}&quot;
                                                         </p>
                                                     ) : (
                                                         <span className="text-xs text-muted-foreground">-</span>
@@ -224,13 +233,13 @@ export default async function ReportesPage({ searchParams }: ReportesPageProps) 
                             </div>
                             {/* Show notes on mobile below the table */}
                             <div className="lg:hidden border-t">
-                                {reportsByDay[date]?.map((report: any) => (
+                                {reportsByDay[date]?.map((report) => (
                                     report.notes && (
                                         <div key={`notes-${report.id}`} className="p-3 border-b last:border-b-0 bg-muted/20">
                                             <p className="text-xs font-medium text-muted-foreground mb-1">
                                                 {report.professor_schedules?.start_time?.slice(0, 5)} - {report.professor_schedules?.sport}
                                             </p>
-                                            <p className="text-sm text-muted-foreground italic">"{report.notes}"</p>
+                                            <p className="text-sm text-muted-foreground italic">&quot;{report.notes}&quot;</p>
                                         </div>
                                     )
                                 ))}

@@ -10,6 +10,7 @@ import { logout } from "@/app/actions/auth"
 import { UserProfile } from "@/app/actions/auth"
 import { Badge } from "@/components/ui/badge"
 import { ModeToggle } from "@/components/mode-toggle"
+import { Chatbot } from "@/components/chatbot/chatbot"
 import type { ComplexBranding } from "@/lib/complex-config"
 
 function DashboardContent({
@@ -28,7 +29,7 @@ function DashboardContent({
     }
 
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex min-h-screen bg-[#edf4fb] dark:bg-[#09111f]">
             {/* Mobile Overlay */}
             {isMobileOpen && (
                 <div
@@ -40,21 +41,33 @@ function DashboardContent({
             {/* Sidebar - Desktop */}
             <aside
                 className={cn(
-                    "hidden md:block border-r bg-background fixed h-full inset-y-0 z-30 transition-all duration-300 ease-in-out",
+                    "hidden md:block border-r border-blue-100/80 bg-white/80 shadow-[8px_0_30px_rgba(51,78,110,0.05)] backdrop-blur-xl fixed h-full inset-y-0 z-30 transition-all duration-300 ease-in-out dark:border-white/8 dark:bg-[#07101f]/95 dark:shadow-black/20",
                     isCollapsed ? "w-16" : "w-64"
                 )}
             >
-                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
+                <Sidebar
+                    className="h-full"
+                    branding={branding}
+                    canManageSettings={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageOperations={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageAdmins={user?.role === "superadmin"}
+                />
             </aside>
 
             {/* Sidebar - Mobile */}
             <aside
                 className={cn(
-                    "md:hidden fixed h-full inset-y-0 left-0 z-50 w-64 border-r bg-background transition-all duration-300 ease-in-out animate-slide-in-left",
+                    "md:hidden fixed h-full inset-y-0 left-0 z-50 w-64 border-r border-blue-100 bg-white/95 shadow-2xl backdrop-blur-xl transition-all duration-300 ease-in-out animate-slide-in-left dark:border-white/10 dark:bg-[#07101f]/98",
                     isMobileOpen ? "translate-x-0" : "-translate-x-full"
                 )}
             >
-                <Sidebar className="h-full" branding={branding} canManageSettings={user?.role === "admin"} />
+                <Sidebar
+                    className="h-full"
+                    branding={branding}
+                    canManageSettings={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageOperations={user?.role === "superadmin" || user?.role === "complex_admin"}
+                    canManageAdmins={user?.role === "superadmin"}
+                />
             </aside>
 
             {/* Main Content */}
@@ -65,7 +78,7 @@ function DashboardContent({
                 )}
             >
                 {/* Top Header */}
-                <header className="flex h-14 md:h-16 items-center justify-between border-b px-4 md:px-6 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20">
+                <header className="sticky top-0 z-20 flex h-14 items-center justify-between border-b border-blue-100/80 bg-white/75 px-4 shadow-sm backdrop-blur-xl md:h-16 md:px-6 dark:border-white/8 dark:bg-[#09111f]/80">
                     <div className="flex items-center gap-4 animate-slide-in-down">
                         {/* Mobile Menu Button */}
                         <Button
@@ -81,12 +94,22 @@ function DashboardContent({
                             )}
                         </Button>
                         <div className="flex flex-col leading-tight">
-                            <span className="text-xs md:text-sm font-semibold uppercase">{branding.displayName}</span>
-                            <span className="hidden text-[11px] text-emerald-600 dark:text-emerald-400 md:inline">Modo SaaS configurable</span>
+                            <span className="text-xs md:text-sm font-semibold uppercase">
+                                {user?.role === "superadmin" ? branding.appName : branding.displayName}
+                            </span>
+                            <span className="hidden text-[11px] text-blue-600 dark:text-blue-300 md:inline">
+                                {user?.role === "superadmin" ? branding.displayName : "Gestión deportiva municipal"}
+                            </span>
                         </div>
                     </div>
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
+                        <Chatbot variant="header" />
                         <ModeToggle />
+                        <Link href="/seleccionar-complejo">
+                            <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                                Cambiar complejo
+                            </Button>
+                        </Link>
                         {user ? (
                             <>
                                 <Link href="/perfil">
@@ -97,8 +120,8 @@ function DashboardContent({
                                     >
                                         <User className="h-4 w-4" />
                                         <span className="hidden md:inline text-xs">{user.email}</span>
-                                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'} className="text-xs transition-all duration-300">
-                                            {user.role === 'admin' ? 'Admin' : 'Usuario'}
+                                        <Badge variant={user.role !== 'common' ? 'default' : 'secondary'} className="text-xs transition-all duration-300">
+                                            {user.role === 'superadmin' ? 'Superadmin' : user.role === 'complex_admin' ? 'Admin' : 'Usuario'}
                                         </Badge>
                                     </Button>
                                 </Link>
@@ -122,7 +145,7 @@ function DashboardContent({
                 </header>
 
                 {/* Page Content */}
-                <div className="flex-1 space-y-4 p-4 md:p-8 pt-4 md:pt-6 animate-fade-in">
+                <div className="flex-1 space-y-4 p-4 md:p-8 md:pt-6 animate-fade-in">
                     {children}
                 </div>
             </main>

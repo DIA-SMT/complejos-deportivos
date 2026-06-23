@@ -6,7 +6,60 @@ import { Button } from "@/components/ui/button"
 
 declare global {
     interface Window {
-        L?: any
+        L?: LeafletApi
+    }
+}
+
+type LeafletMap = {
+    setView: (coordinates: [number, number], zoom: number) => LeafletMap
+    on: (event: "click", callback: (event: LeafletClickEvent) => void) => void
+    remove: () => void
+}
+
+type LeafletMarker = {
+    addTo: (map: LeafletMap) => LeafletMarker
+    setLatLng: (coordinates: [number, number]) => void
+}
+
+type LeafletClickEvent = {
+    latlng: {
+        lat: number
+        lng: number
+    }
+}
+
+type LeafletApi = {
+    map: (element: HTMLElement, options: {
+        zoomControl: boolean
+        attributionControl: boolean
+        scrollWheelZoom: boolean
+        dragging: boolean
+        touchZoom: boolean
+        doubleClickZoom: boolean
+        boxZoom: boolean
+        keyboard: boolean
+    }) => LeafletMap
+    tileLayer: (url: string, options: { maxZoom: number; attribution: string }) => { addTo: (map: LeafletMap) => void }
+    divIcon: (options: { className: string; html: string; iconSize: [number, number]; iconAnchor: [number, number] }) => unknown
+    marker: (coordinates: [number, number], options: { icon: unknown }) => LeafletMarker
+}
+
+type NominatimResponse = {
+    display_name?: string
+    address?: {
+        road?: string
+        pedestrian?: string
+        footway?: string
+        cycleway?: string
+        house_number?: string
+        neighbourhood?: string
+        suburb?: string
+        city_district?: string
+        city?: string
+        town?: string
+        village?: string
+        municipality?: string
+        state?: string
     }
 }
 
@@ -22,7 +75,7 @@ const DEFAULT_CENTER = {
     longitude: -65.2226,
 }
 
-let leafletPromise: Promise<any> | null = null
+let leafletPromise: Promise<LeafletApi | null> | null = null
 
 function loadLeaflet() {
     if (typeof window === "undefined") return Promise.resolve(null)
@@ -40,7 +93,7 @@ function loadLeaflet() {
 
             const existingScript = document.querySelector<HTMLScriptElement>('script[data-leaflet="true"]')
             if (existingScript) {
-                existingScript.addEventListener("load", () => resolve(window.L))
+                existingScript.addEventListener("load", () => resolve(window.L ?? null))
                 existingScript.addEventListener("error", reject)
                 return
             }
@@ -49,7 +102,7 @@ function loadLeaflet() {
             script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
             script.async = true
             script.dataset.leaflet = "true"
-            script.onload = () => resolve(window.L)
+            script.onload = () => resolve(window.L ?? null)
             script.onerror = reject
             document.body.appendChild(script)
         })
@@ -58,7 +111,7 @@ function loadLeaflet() {
     return leafletPromise
 }
 
-function formatAddress(data: any) {
+function formatAddress(data: NominatimResponse) {
     const address = data?.address || {}
     const road = address.road || address.pedestrian || address.footway || address.cycleway
     const houseNumber = address.house_number
@@ -94,7 +147,7 @@ async function reverseGeocode(latitude: number, longitude: number) {
 
         if (!response.ok) return undefined
 
-        const data = await response.json()
+        const data = (await response.json()) as NominatimResponse
         const address = formatAddress(data)
         return address || undefined
     } catch {
@@ -109,24 +162,50 @@ export function LocationMapPicker({
     onChange,
 }: LocationMapPickerProps) {
     const mapElementRef = useRef<HTMLDivElement | null>(null)
-    const mapRef = useRef<any>(null)
-    const markerRef = useRef<any>(null)
+    const mapWrapperRef = useRef<HTMLDivElement | null>(null)
+    const mapRef = useRef<LeafletMap | null>(null)
+    const markerRef = useRef<LeafletMarker | null>(null)
+    const onChangeRef = useRef(onChange)
+    const markerIconRef = useRef(selectedMarkerIcon)
+    const initialZoomRef = useRef(initialLatitude && initialLongitude ? 15 : 12)
+    const [isMapOpen, setIsMapOpen] = useState(false)
     const [isResolvingAddress, setIsResolvingAddress] = useState(false)
     const [selectedLocation, setSelectedLocation] = useState({
         latitude: initialLatitude ?? DEFAULT_CENTER.latitude,
         longitude: initialLongitude ?? DEFAULT_CENTER.longitude,
     })
+    const selectedLocationRef = useRef(selectedLocation)
+
+    useEffect(() => {
+        onChangeRef.current = onChange
+    }, [onChange])
+
+    useEffect(() => {
+        markerIconRef.current = selectedMarkerIcon
+    }, [selectedMarkerIcon])
+
+    useEffect(() => {
+        selectedLocationRef.current = selectedLocation
+    }, [selectedLocation])
 
     useEffect(() => {
         let isMounted = true
+        if (!isMapOpen) return
 
         loadLeaflet().then((L) => {
             if (!isMounted || !L || !mapElementRef.current || mapRef.current) return
 
+            const currentLocation = selectedLocationRef.current
             const map = L.map(mapElementRef.current, {
                 zoomControl: true,
                 attributionControl: true,
-            }).setView([selectedLocation.latitude, selectedLocation.longitude], initialLatitude && initialLongitude ? 15 : 12)
+                scrollWheelZoom: false,
+                dragging: false,
+                touchZoom: false,
+                doubleClickZoom: false,
+                boxZoom: false,
+                keyboard: false,
+            }).setView([currentLocation.latitude, currentLocation.longitude], initialZoomRef.current)
 
             L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
                 maxZoom: 19,
@@ -135,19 +214,19 @@ export function LocationMapPicker({
 
             const leafletMarkerIcon = L.divIcon({
                 className: "osm-location-marker",
-                html: `<span><i>${selectedMarkerIcon}</i></span>`,
+                html: `<span><i>${markerIconRef.current}</i></span>`,
                 iconSize: [38, 48],
                 iconAnchor: [19, 44],
             })
 
-            const marker = L.marker([selectedLocation.latitude, selectedLocation.longitude], {
+            const marker = L.marker([currentLocation.latitude, currentLocation.longitude], {
                 icon: leafletMarkerIcon,
             }).addTo(map)
 
             markerRef.current = marker
             mapRef.current = map
 
-            map.on("click", async (event: any) => {
+            map.on("click", async (event) => {
                 const nextLocation = {
                     latitude: Number(event.latlng.lat.toFixed(7)),
                     longitude: Number(event.latlng.lng.toFixed(7)),
@@ -158,7 +237,7 @@ export function LocationMapPicker({
                 setIsResolvingAddress(true)
                 const address = await reverseGeocode(nextLocation.latitude, nextLocation.longitude)
                 setIsResolvingAddress(false)
-                onChange({ ...nextLocation, address })
+                onChangeRef.current({ ...nextLocation, address })
             })
         })
 
@@ -170,10 +249,23 @@ export function LocationMapPicker({
                 markerRef.current = null
             }
         }
+    }, [isMapOpen])
+
+    useEffect(() => {
+        const wrapper = mapWrapperRef.current
+        if (!wrapper) return
+
+        const keepPageScroll = (event: WheelEvent) => {
+            event.stopImmediatePropagation()
+        }
+
+        wrapper.addEventListener("wheel", keepPageScroll, { capture: true, passive: true })
+        return () => wrapper.removeEventListener("wheel", keepPageScroll, { capture: true })
     }, [])
 
     const useCurrentLocation = () => {
-        if (!navigator.geolocation || !mapRef.current || !markerRef.current) return
+        if (!navigator.geolocation) return
+        setIsMapOpen(true)
 
         navigator.geolocation.getCurrentPosition(async (position) => {
             const nextLocation = {
@@ -181,8 +273,8 @@ export function LocationMapPicker({
                 longitude: Number(position.coords.longitude.toFixed(7)),
             }
 
-            mapRef.current.setView([nextLocation.latitude, nextLocation.longitude], 16)
-            markerRef.current.setLatLng([nextLocation.latitude, nextLocation.longitude])
+            mapRef.current?.setView([nextLocation.latitude, nextLocation.longitude], 16)
+            markerRef.current?.setLatLng([nextLocation.latitude, nextLocation.longitude])
             setSelectedLocation(nextLocation)
             setIsResolvingAddress(true)
             const address = await reverseGeocode(nextLocation.latitude, nextLocation.longitude)
@@ -193,19 +285,32 @@ export function LocationMapPicker({
 
     return (
         <div className="grid gap-2">
-            <div className="relative overflow-hidden rounded-lg border">
-                <div ref={mapElementRef} className="h-72 w-full bg-muted" />
-                <Button
-                    type="button"
-                    variant="secondary"
-                    size="sm"
-                    onClick={useCurrentLocation}
-                    className="absolute right-3 top-3 z-[500] shadow-sm"
-                >
-                    <LocateFixed className="h-4 w-4" />
-                    Mi ubicacion
-                </Button>
+            <div className="rounded-lg border bg-muted/20 p-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <p className="text-sm font-medium">Ubicacion en mapa</p>
+                        <p className="text-xs text-muted-foreground">
+                            {selectedLocation.latitude.toFixed(5)}, {selectedLocation.longitude.toFixed(5)}
+                        </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <Button type="button" variant="outline" size="sm" onClick={() => setIsMapOpen((value) => !value)}>
+                            {isMapOpen ? "Ocultar mapa" : "Editar en mapa"}
+                        </Button>
+                        <Button type="button" variant="secondary" size="sm" onClick={useCurrentLocation}>
+                            <LocateFixed className="h-4 w-4" />
+                            Mi ubicacion
+                        </Button>
+                    </div>
+                </div>
             </div>
+
+            {isMapOpen ? (
+                <div ref={mapWrapperRef} className="relative touch-pan-y overflow-hidden rounded-lg border">
+                    <div ref={mapElementRef} className="h-72 w-full bg-muted" />
+                </div>
+            ) : null}
+
             <p className="text-xs text-muted-foreground">
                 {isResolvingAddress
                     ? "Buscando direccion del punto seleccionado..."

@@ -47,7 +47,7 @@ export async function createInventoryItem(formData: FormData) {
         quantity,
         description: description || null,
         complex_id: activeComplexId,
-    } as any)
+    })
 
     if (error) {
         console.error("Error creating item:", error)
@@ -82,7 +82,7 @@ export async function updateInventoryItem(formData: FormData) {
             name,
             quantity,
             description: description || null,
-        } as any)
+        })
         .eq("id", id)
         .eq("complex_id", activeComplexId)
         .select()

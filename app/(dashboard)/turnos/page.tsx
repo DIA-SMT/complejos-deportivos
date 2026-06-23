@@ -6,6 +6,8 @@ import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, eachDayOfInte
 import { es } from "date-fns/locale"
 import { CalendarView } from "@/components/turnos/calendar-view"
 import { getActiveComplexId } from "@/app/actions/complex-settings"
+import type { CalendarShift } from "@/components/turnos/types"
+import type { Tables } from "@/types/database.types"
 
 interface TurnosPageProps {
     searchParams: Promise<{ week?: string }>
@@ -74,19 +76,19 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
         console.error("Error fetching class reviews:", reviewsError)
     }
 
-    const reviewsMap = new Map();
-    classReviews?.forEach((review: any) => {
+    const reviewsMap = new Map<string, Tables<"class_reviews">>();
+    classReviews?.forEach((review) => {
         const key = `${review.schedule_id}-${review.date}`;
         reviewsMap.set(key, review);
     });
 
-    // Generate formatted shifts list including recurring ones
     const allDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd })
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const formattedShifts: any[] = []
+    const formattedShifts: CalendarShift[] = []
 
     // Add normal shifts
-    shifts?.forEach((shift: any) => {
+    shifts?.forEach((shift) => {
+        const shiftWithGroup = shift as typeof shift & { group_name?: string | null }
+
         formattedShifts.push({
             id: shift.id,
             date: shift.date,
@@ -94,8 +96,8 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
             end_time: shift.end_time,
             court_name: shift.courts?.name || "Sin cancha",
             professor_name: shift.professors?.full_name || "Sin profesor",
-            group_name: shift.group_name || "",
-            status: shift.status
+            group_name: shiftWithGroup.group_name || "",
+            status: shift.status || "scheduled"
         })
     })
 
@@ -105,8 +107,7 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
         const dayName = format(day, 'EEEE', { locale: es })
         const normalizedDayName = dayName.charAt(0).toUpperCase() + dayName.slice(1);
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        recurringSchedules?.forEach((schedule: any) => {
+        recurringSchedules?.forEach((schedule) => {
             if (schedule.day_of_week === normalizedDayName) {
                 const report = reviewsMap.get(`${schedule.id}-${dateKey}`);
 

@@ -14,15 +14,16 @@ import {
 import { PlusCircle } from "lucide-react";
 
 import { EditInventoryDialog } from "@/components/inventory/edit-inventory-dialog";
+import type { Tables } from "@/types/database.types";
 
 export default async function InventarioPage() {
-    const inventory = (await getInventory()) as any[];
+    const inventory = (await getInventory()) as Tables<"inventory">[];
     const user = await getCurrentUser();
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'superadmin' || user?.role === 'complex_admin';
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+            <div className="group relative mb-8 h-[250px] w-full overflow-hidden rounded-2xl border border-blue-200/20 shadow-[0_20px_50px_rgba(30,64,175,0.18)] animate-fade-in sm:h-[300px]">
                 <div className="absolute inset-0 bg-blue-900/20">
                     <img
                         src="/images/inventario.png"
@@ -47,7 +48,7 @@ export default async function InventarioPage() {
                 {/* Formulario de Alta - Solo visible para admin */}
                 {isAdmin && (
                     <div className="lg:col-span-1 animate-slide-in-up animation-delay-100">
-                        <div className="rounded-lg border bg-card text-card-foreground shadow-sm hover-lift">
+                        <div className="rounded-2xl border border-blue-100/80 bg-card/90 text-card-foreground shadow-[0_12px_32px_rgba(51,78,110,0.09)] hover-lift dark:border-white/10">
                             <div className="flex flex-col space-y-1.5 p-6">
                                 <h3 className="font-semibold leading-none tracking-tight">Agregar Item</h3>
                                 <p className="text-sm text-muted-foreground">Nuevo elemento al inventario.</p>

@@ -16,6 +16,10 @@ type ProfessorWithSchedules = Database['public']['Tables']['professors']['Row'] 
     })[]
 }
 
+type ProfessorReview = Database['public']['Tables']['class_reviews']['Row'] & {
+    schedule: ProfessorWithSchedules["professor_schedules"][number]
+}
+
 import {
     Accordion,
     AccordionContent,
@@ -32,14 +36,14 @@ export default async function ProfesoresPage() {
         getCourts(),
     ]);
     const professors = professorsData as unknown as ProfessorWithSchedules[];
-    const isAdmin = user?.role === 'admin';
+    const isAdmin = user?.role === 'superadmin' || user?.role === 'complex_admin';
 
     const days = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const sports = sportsData.map((sport) => sport.name);
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+            <div className="group relative mb-8 h-[250px] w-full overflow-hidden rounded-2xl border border-blue-200/20 shadow-[0_20px_50px_rgba(30,64,175,0.18)] animate-fade-in sm:h-[300px]">
                 <div className="absolute inset-0 bg-blue-900/20">
                     <img
                         src="/images/profesores.png"
@@ -112,11 +116,9 @@ export default async function ProfesoresPage() {
                                                         <h4 className="text-sm font-medium leading-none flex items-center gap-2">
                                                             <Clock className="h-4 w-4" /> Horarios Asignados
                                                         </h4>
-                                                        {/* @ts-ignore */}
-                                                        {(prof as any).professor_schedules && (prof as any).professor_schedules.length > 0 ? (
+                                                        {prof.professor_schedules.length > 0 ? (
                                                             <div className="grid gap-2">
-                                                                {/* @ts-ignore */}
-                                                                {(prof as any).professor_schedules.map((schedule: any) => (
+                                                                {prof.professor_schedules.map((schedule) => (
                                                                     <ScheduleItem
                                                                         key={schedule.id}
                                                                         schedule={schedule}
@@ -154,11 +156,11 @@ export default async function ProfesoresPage() {
                                                         </h4>
 
                                                         {(() => {
-                                                            const allReviews = (prof as any).professor_schedules
-                                                                ?.flatMap((s: any) =>
-                                                                    (s.class_reviews || []).map((r: any) => ({ ...r, schedule: s }))
+                                                            const allReviews: ProfessorReview[] = prof.professor_schedules
+                                                                .flatMap((schedule) =>
+                                                                    (schedule.class_reviews || []).map((review) => ({ ...review, schedule }))
                                                                 )
-                                                                .sort((a: any, b: any) => new Date(b.date).getTime() - new Date(a.date).getTime()) || [];
+                                                                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
                                                             if (allReviews.length === 0) {
                                                                 return <p className="text-sm text-muted-foreground italic">No hay reportes registrados.</p>;
@@ -166,7 +168,7 @@ export default async function ProfesoresPage() {
 
                                                             return (
                                                                 <div className="grid gap-2 max-h-60 overflow-y-auto pr-2">
-                                                                    {allReviews.map((review: any) => (
+                                                                    {allReviews.map((review) => (
                                                                         <div key={`${review.schedule_id}-${review.date}`} className="flex flex-col gap-1 rounded-md border p-3 text-sm bg-background/50 hover:bg-background transition-colors">
                                                                             <div className="flex items-center justify-between">
                                                                                 <span className="font-semibold text-primary text-xs sm:text-sm">{review.schedule.sport} - {review.schedule.day_of_week} {review.schedule.start_time.slice(0, 5)}</span>
@@ -176,7 +178,7 @@ export default async function ProfesoresPage() {
                                                                                 <span>Asistencia: {review.attendance ?? '-'}</span>
                                                                             </div>
                                                                             {review.notes && (
-                                                                                <p className="text-muted-foreground mt-1 bg-muted/30 p-2 rounded italic text-xs sm:text-sm">"{review.notes}"</p>
+                                                                                <p className="text-muted-foreground mt-1 bg-muted/30 p-2 rounded italic text-xs sm:text-sm">&quot;{review.notes}&quot;</p>
                                                                             )}
                                                                         </div>
                                                                     ))}

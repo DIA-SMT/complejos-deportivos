@@ -14,7 +14,7 @@ interface Message {
     content: string
 }
 
-export function Chatbot() {
+export function Chatbot({ variant = "floating" }: { variant?: "floating" | "header" }) {
     const [isOpen, setIsOpen] = useState(false)
     const [messages, setMessages] = useState<Message[]>([
         {
@@ -89,23 +89,35 @@ export function Chatbot() {
     return (
         <>
             {!isOpen && (
-                <div className="fixed bottom-4 right-4 md:bottom-6 md:right-6 z-50 flex items-center gap-4">
-                    <div className="bg-popover text-popover-foreground px-4 py-2 rounded-xl shadow-lg border border-border animate-bounce-subtle hidden md:block relative">
-                        <span className="font-bold text-sm">Necesitas ayuda?</span>
-                        <div className="absolute top-1/2 -right-1 w-2 h-2 bg-popover border-t border-r border-border transform rotate-45 -translate-y-1/2"></div>
-                    </div>
+                <div className={variant === "header"
+                    ? "relative z-50"
+                    : "fixed bottom-3 right-3 z-50 flex items-center gap-4 md:bottom-6 md:right-6"
+                }>
+                    {variant === "floating" ? (
+                        <div className="relative hidden animate-bounce-subtle rounded-xl border border-border bg-popover px-4 py-2 text-popover-foreground shadow-lg md:block">
+                            <span className="text-sm font-bold">Necesitas ayuda?</span>
+                            <div className="absolute top-1/2 -right-1 h-2 w-2 -translate-y-1/2 rotate-45 border-r border-t border-border bg-popover"></div>
+                        </div>
+                    ) : null}
                     <Button
                         onClick={() => setIsOpen(true)}
-                        className="h-20 w-20 md:h-24 md:w-24 rounded-full shadow-lg p-0 overflow-hidden border-2 border-white/20 bg-white hover:scale-110 transition-transform duration-300 dark:bg-slate-100"
+                        className={variant === "header"
+                            ? "h-9 w-9 overflow-hidden rounded-full border bg-white p-0 shadow-sm transition-transform hover:scale-105 dark:bg-slate-100"
+                            : "h-16 w-16 overflow-hidden rounded-full border-2 border-white/20 bg-white p-0 shadow-lg transition-transform duration-300 hover:scale-110 md:h-24 md:w-24 dark:bg-slate-100"
+                        }
                         size="icon"
+                        title="Abrir asistente Migue"
                     >
                         <div className="relative h-full w-full">
                             <Image
                                 src="/images/migue-avatar.png"
                                 alt="Migue, asistente del complejo"
                                 fill
-                                sizes="96px"
-                                className="object-contain object-center p-1.5"
+                                sizes={variant === "header" ? "36px" : "96px"}
+                                className={variant === "header"
+                                    ? "object-contain object-center p-0.5"
+                                    : "object-contain object-center p-1.5"
+                                }
                                 priority
                             />
                         </div>
