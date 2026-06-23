@@ -60,7 +60,7 @@ export function Sidebar({ className, branding, canManageSettings = false, canMan
 
                     {/* Navigation Links */}
                     <div className="space-y-1">
-                        <Link href="/" onClick={handleLinkClick}>
+                        <Link href="/" target="_blank" rel="noopener noreferrer" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(
@@ -73,7 +73,7 @@ export function Sidebar({ className, branding, canManageSettings = false, canMan
                                 <span className={cn(isCollapsed && "md:hidden")}>Inicio</span>
                             </Button>
                         </Link>
-                        <Link href="/complejo" onClick={handleLinkClick}>
+                        <Link href="/complejo" target="_blank" rel="noopener noreferrer" onClick={handleLinkClick}>
                             <Button
                                 variant="ghost"
                                 className={cn(

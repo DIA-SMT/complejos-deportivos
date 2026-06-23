@@ -145,9 +145,9 @@ export function DigitalCredentialCard({
                                     </h3>
                                     <div className="mt-4 grid grid-cols-2 gap-4">
                                         <div>
-                                            <p className="text-[8px] uppercase tracking-[0.22em] text-[#ffdc00]">Socio N.º</p>
-                                            <p className="mt-1 font-mono text-sm font-bold tracking-[0.12em] sm:text-base">
-                                                {credential.code.replace(/^CRED-/i, "")}
+                                            <p className="text-[8px] uppercase tracking-[0.22em] text-[#ffdc00]">Identificador</p>
+                                            <p className="mt-1 whitespace-nowrap font-mono text-sm font-bold tracking-[0.08em] sm:text-base">
+                                                {credential.code}
                                             </p>
                                         </div>
                                         <div>

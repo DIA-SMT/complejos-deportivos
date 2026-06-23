@@ -42,7 +42,7 @@ export async function getComplexPublicOverview() {
         getCourts({ complexId: activeComplexId }),
         supabase
             .from("professors")
-            .select("id, full_name, email, specialty, status")
+            .select("id, full_name, email, specialty")
             .eq("complex_id", activeComplexId)
             .order("full_name", { ascending: true }),
         supabase
@@ -69,7 +69,6 @@ export async function getComplexPublicOverview() {
                 start_time,
                 end_time,
                 status,
-                price,
                 courts (name),
                 professors (full_name)
             `)

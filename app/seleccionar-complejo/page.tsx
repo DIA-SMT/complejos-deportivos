@@ -1,5 +1,6 @@
 import Image from "next/image"
 import Link from "next/link"
+import { redirect } from "next/navigation"
 import { Building2 } from "lucide-react"
 import { requireAdmin } from "@/app/actions/auth"
 import { getActiveComplexId, getManageableComplexes, selectActiveComplexAndRedirect } from "@/app/actions/complex-settings"
@@ -19,6 +20,10 @@ export default async function SeleccionarComplejoPage({
         getManageableComplexes(),
         getActiveComplexId(),
     ])
+
+    if (user.role === "complex_admin" && complexes.length === 1) {
+        redirect("/turnos")
+    }
 
     return (
         <main className="flex min-h-screen items-center justify-center bg-[#edf4fb] p-4 dark:bg-[#09111f]">

@@ -52,7 +52,7 @@ export async function middleware(request: NextRequest) {
             const destination = profile.role === 'superadmin'
                 ? '/turnos'
                 : profile.role === 'complex_admin'
-                    ? '/seleccionar-complejo'
+                    ? '/turnos'
                     : '/'
             return NextResponse.redirect(new URL(destination, request.url))
         }
