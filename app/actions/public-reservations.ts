@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache"
 import { addDays, format } from "date-fns"
-import { getUserActiveComplexId } from "@/app/actions/complex-settings"
+import { requireAdmin } from "@/app/actions/auth"
+import { getActiveComplexId, getUserActiveComplexId } from "@/app/actions/complex-settings"
 import { createClient } from "@/utils/supabase/server"
 
 export type UserReservationRequest = {
@@ -22,6 +23,124 @@ export type PublicAvailabilityBlock = {
     date: string
     start_time: string
     end_time: string | null
+}
+
+export type AdminReservationRequest = {
+    id: string
+    sport: string
+    preferred_date: string
+    preferred_time: string
+    status: string
+    notes: string | null
+    created_at: string
+    citizens: {
+        full_name: string
+        phone: string
+        email: string | null
+    } | null
+    courts: { name: string } | null
+    complexes: { name: string } | null
+}
+
+export async function getAdminReservationRequestsForActiveComplex(): Promise<AdminReservationRequest[]> {
+    await requireAdmin()
+    const activeComplexId = await getActiveComplexId()
+
+    if (!activeComplexId) return []
+
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("reservation_requests")
+        .select(`
+            id,
+            sport,
+            preferred_date,
+            preferred_time,
+            status,
+            notes,
+            created_at,
+            citizens (full_name, phone, email),
+            courts (name),
+            complexes (name)
+        `)
+        .eq("complex_id", activeComplexId)
+        .order("created_at", { ascending: false })
+        .limit(100)
+
+    if (error) {
+        console.error("Error fetching admin reservation requests:", error)
+        return []
+    }
+
+    return (data || []) as AdminReservationRequest[]
+}
+
+export async function updateReservationRequestStatus(
+    requestId: string,
+    status: "confirmed" | "rejected",
+) {
+    await requireAdmin()
+    const activeComplexId = await getActiveComplexId()
+
+    if (!activeComplexId) {
+        return { error: "Seleccioná un complejo antes de gestionar solicitudes." }
+    }
+
+    const supabase = await createClient()
+    const { data: request, error: requestError } = await supabase
+        .from("reservation_requests")
+        .select("id, status, complex_id, court_id, preferred_date, preferred_time")
+        .eq("id", requestId)
+        .eq("complex_id", activeComplexId)
+        .maybeSingle()
+
+    if (requestError || !request) {
+        return { error: "La solicitud no existe o no pertenece al complejo activo." }
+    }
+
+    if (request.status !== "pending") {
+        return { error: "La solicitud ya fue procesada." }
+    }
+
+    if (status === "confirmed" && request.court_id) {
+        const { data: conflict, error: conflictError } = await supabase
+            .from("reservation_requests")
+            .select("id")
+            .eq("court_id", request.court_id)
+            .eq("preferred_date", request.preferred_date)
+            .eq("preferred_time", request.preferred_time)
+            .eq("status", "confirmed")
+            .neq("id", request.id)
+            .limit(1)
+
+        if (conflictError) {
+            return { error: "No se pudo validar la disponibilidad del turno." }
+        }
+
+        if (conflict?.length) {
+            return { error: "Ese horario ya fue confirmado para otra solicitud." }
+        }
+    }
+
+    const { error } = await supabase
+        .from("reservation_requests")
+        .update({
+            status,
+            updated_at: new Date().toISOString(),
+        })
+        .eq("id", request.id)
+        .eq("complex_id", activeComplexId)
+        .eq("status", "pending")
+
+    if (error) {
+        return { error: `No se pudo actualizar la solicitud: ${error.message}` }
+    }
+
+    revalidatePath("/turnos")
+    revalidatePath("/complejo")
+    revalidatePath("/reservar")
+
+    return { success: true }
 }
 
 export async function getPublicAvailabilityBlocks(): Promise<PublicAvailabilityBlock[]> {

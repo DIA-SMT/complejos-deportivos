@@ -1,5 +1,6 @@
 'use server'
 
+import { randomInt } from "node:crypto"
 import { revalidatePath } from "next/cache"
 import { requireAdmin, requireAuth } from "@/app/actions/auth"
 import { getActiveComplexId, getUserActiveComplexId } from "@/app/actions/complex-settings"
@@ -70,8 +71,14 @@ function normalizeEmail(value?: string | null) {
 }
 
 function generateCredentialCode() {
-    const chunk = Math.random().toString(36).slice(2, 8).toUpperCase()
-    return `CRED-${chunk}`
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+    const randomChunk = (length: number) =>
+        Array.from(
+            { length },
+            () => alphabet[randomInt(alphabet.length)],
+        ).join("")
+
+    return `DM-${randomChunk(4)}-${randomChunk(4)}`
 }
 
 const membershipTypes = new Set(["mensual", "trimestral", "semestral", "anual", "staff"])

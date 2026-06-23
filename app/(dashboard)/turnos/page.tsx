@@ -6,6 +6,8 @@ import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, format, eachDayOfInte
 import { es } from "date-fns/locale"
 import { CalendarView } from "@/components/turnos/calendar-view"
 import { getActiveComplexId } from "@/app/actions/complex-settings"
+import { getAdminReservationRequestsForActiveComplex } from "@/app/actions/public-reservations"
+import { ReservationRequestsPanel } from "@/components/turnos/reservation-requests-panel"
 import type { CalendarShift } from "@/components/turnos/types"
 import type { Tables } from "@/types/database.types"
 
@@ -17,6 +19,7 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     const params = await searchParams
     const supabase = await createClient()
     const activeComplexId = await getActiveComplexId()
+    const reservationRequests = await getAdminReservationRequestsForActiveComplex()
 
     // Default to current date or selected "week" (which acts as anchor date)
     const currentDate = params.week ? new Date(params.week + 'T00:00:00') : new Date()
@@ -128,7 +131,9 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
     })
 
     return (
-        <div className="relative flex flex-col h-[calc(100vh-6rem)] w-full overflow-hidden">
+        <div className="space-y-6">
+            <ReservationRequestsPanel requests={reservationRequests} />
+            <div className="relative flex h-[calc(100vh-9rem)] w-full flex-col overflow-hidden rounded-2xl">
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
                 <img
@@ -142,6 +147,7 @@ export default async function TurnosPage({ searchParams }: TurnosPageProps) {
 
             <div className="relative z-10 flex-1 h-full">
                 <CalendarView currentDate={currentDate} shifts={formattedShifts} />
+            </div>
             </div>
         </div>
     )

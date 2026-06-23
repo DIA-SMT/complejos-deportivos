@@ -17,10 +17,12 @@ function DashboardContent({
     children,
     user,
     branding,
+    canChangeComplex,
 }: {
     children: React.ReactNode
     user: UserProfile | null
     branding: ComplexBranding
+    canChangeComplex: boolean
 }) {
     const { isCollapsed, isMobileOpen, toggleMobileSidebar, setIsMobileOpen } = useSidebar()
 
@@ -105,11 +107,13 @@ function DashboardContent({
                     <div className="flex items-center gap-2 text-sm animate-slide-in-down animation-delay-100">
                         <Chatbot variant="header" />
                         <ModeToggle />
-                        <Link href="/seleccionar-complejo">
-                            <Button variant="outline" size="sm" className="hidden md:inline-flex">
-                                Cambiar complejo
-                            </Button>
-                        </Link>
+                        {canChangeComplex ? (
+                            <Link href="/seleccionar-complejo">
+                                <Button variant="outline" size="sm" className="hidden md:inline-flex">
+                                    Cambiar complejo
+                                </Button>
+                            </Link>
+                        ) : null}
                         {user ? (
                             <>
                                 <Link href="/perfil">

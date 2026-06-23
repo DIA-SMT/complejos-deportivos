@@ -33,7 +33,7 @@ export function LoginForm() {
             profile?.role === "superadmin"
                 ? "/turnos"
                 : profile?.role === "complex_admin"
-                    ? "/seleccionar-complejo"
+                    ? "/turnos"
                     : "/"
         )
         router.refresh()
