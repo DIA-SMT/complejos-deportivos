@@ -44,6 +44,24 @@ export const complexConfig: ComplexBranding = {
     assistantName: "Migue",
 }
 
+export const municipalPlatformBranding: ComplexBranding = {
+    appName: "Deportes Municipio",
+    complexName: "Municipalidad",
+    displayName: "Municipalidad",
+    logoSrc: "/logoMuni-sm.png",
+    logoAlt: "Logo de la Municipalidad",
+    address: "",
+    latitude: null,
+    longitude: null,
+    mapMarkerIcon: "\u{1F3DB}\uFE0F",
+    description: "Plataforma municipal de gestión deportiva",
+    footerLines: [
+        "Municipalidad",
+        "Gestión deportiva municipal",
+    ],
+    assistantName: "Migue",
+}
+
 export const newComplexBranding: ComplexBranding = {
     ...complexConfig,
     id: undefined,

@@ -130,7 +130,7 @@ export function FacilitiesSettings({
         if (!confirm(`¿Eliminar ${selectedSportIds.length} deporte(s) seleccionado(s)?`)) return
 
         setIsDeletingSports(true)
-        const result = await deleteSports(selectedSportIds)
+        const result = await deleteSports(selectedSportIds, selectedComplexId)
         setIsDeletingSports(false)
         if (result?.error) {
             toast.error(result.error)
@@ -200,7 +200,7 @@ export function FacilitiesSettings({
                 </form>
                 ) : (
                     <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">
-                        El catálogo de deportes es global y sólo puede modificarlo el superadministrador.
+                        No tenes permisos para modificar los deportes de este complejo.
                     </div>
                 )}
 

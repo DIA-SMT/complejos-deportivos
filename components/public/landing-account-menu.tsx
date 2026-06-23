@@ -27,11 +27,11 @@ export function LandingAccountMenu({
     const authenticated = Boolean(email)
 
     return (
-        <details className="group relative z-[70]">
-            <summary className="flex cursor-pointer list-none items-center gap-2 rounded-md border border-white/30 bg-black/35 px-3 py-2 text-sm font-medium text-white shadow-sm backdrop-blur-md transition hover:bg-black/50 [&::-webkit-details-marker]:hidden">
+        <details className="group relative z-[70] shrink-0">
+            <summary className="flex h-10 w-10 cursor-pointer list-none items-center justify-center gap-2 rounded-md border border-white/30 bg-black/35 p-0 text-sm font-medium text-white shadow-sm backdrop-blur-md transition hover:bg-black/50 sm:w-auto sm:px-3 [&::-webkit-details-marker]:hidden">
                 {authenticated ? <User className="h-4 w-4" /> : <LogIn className="h-4 w-4" />}
-                <span>{authenticated ? "Mi perfil" : "Ingresar"}</span>
-                <ChevronDown className="h-4 w-4 transition-transform group-open:rotate-180" />
+                <span className="hidden sm:inline">{authenticated ? "Mi perfil" : "Ingresar"}</span>
+                <ChevronDown className="hidden h-4 w-4 transition-transform group-open:rotate-180 sm:block" />
             </summary>
 
             <div className="absolute right-0 z-[80] mt-2 w-[min(18rem,calc(100vw-2.5rem))] overflow-hidden rounded-xl border border-border/80 bg-popover text-popover-foreground shadow-2xl ring-1 ring-black/10">

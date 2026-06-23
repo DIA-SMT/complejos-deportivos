@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
-import { requireAdmin, requireSuperAdmin } from "@/app/actions/auth"
+import { requireAdmin } from "@/app/actions/auth"
 import { createClient } from "@/utils/supabase/server"
 import { getActiveComplexId, getManageableComplexes } from "@/app/actions/complex-settings"
 
@@ -24,6 +24,11 @@ export type Court = {
     sports?: { id: string; name: string } | null
 }
 
+export type ComplexSport = {
+    complex_id: string
+    sport_id: string
+}
+
 const fallbackSports = ["Futbol", "Voley", "Basket", "Gimnasia", "Padel", "Natacion"]
 
 async function canManageComplex(complexId: string) {
@@ -31,8 +36,27 @@ async function canManageComplex(complexId: string) {
     return manageableComplexes.some((complex) => complex.id === complexId)
 }
 
-export async function getSports(): Promise<Sport[]> {
+export async function getSports(options?: { includeAll?: boolean; complexId?: string | null }): Promise<Sport[]> {
     const supabase = await createClient()
+    const selectedComplexId = options?.complexId ?? (options?.includeAll ? null : await getActiveComplexId())
+
+    if (selectedComplexId) {
+        const { data, error } = await supabase
+            .from("complex_sports")
+            .select("sports(*)")
+            .eq("complex_id", selectedComplexId)
+
+        if (!error) {
+            return (data || [])
+                .map((association) => Array.isArray(association.sports) ? association.sports[0] : association.sports)
+                .filter((sport): sport is Sport => Boolean(sport))
+                .sort((a, b) => a.name.localeCompare(b.name))
+        }
+
+        if (!error.message.includes("complex_sports")) {
+            console.error("Error fetching sports for complex:", error)
+        }
+    }
 
     const { data, error } = await supabase
         .from("sports")
@@ -102,63 +126,139 @@ export async function getPublicCourts(): Promise<Court[]> {
     })) as Court[]
 }
 
+export async function getPublicComplexSports(): Promise<ComplexSport[]> {
+    const supabase = await createClient()
+    const { data, error } = await supabase
+        .from("complex_sports")
+        .select("complex_id, sport_id")
+
+    if (error) {
+        console.error("Error fetching sports by complex:", error)
+        return []
+    }
+
+    return data || []
+}
+
 export async function createSport(formData: FormData) {
-    await requireSuperAdmin()
+    const user = await requireAdmin()
 
     const name = (formData.get("name") as string | null)?.trim()
     const iconUrl = (formData.get("iconUrl") as string | null)?.trim()
+    const complexId = (formData.get("complexId") as string | null)?.trim()
 
-    if (!name) {
-        return { error: "El nombre del deporte es requerido" }
+    if (!name || !complexId) {
+        return { error: "El nombre del deporte y el complejo son requeridos." }
+    }
+
+    if (!await canManageComplex(complexId)) {
+        return { error: "No tenes permisos para administrar los deportes de ese complejo." }
     }
 
     const supabase = await createClient()
-    const { error } = await supabase.from("sports").insert({ name, icon_url: iconUrl || null })
+    const { data: existingSport, error: lookupError } = await supabase
+        .from("sports")
+        .select("id, name")
+        .ilike("name", name)
+        .limit(1)
+        .maybeSingle()
 
-    if (error?.message.includes("Could not find the 'icon_url' column")) {
-        const { error: retryError } = await supabase.from("sports").insert({ name })
-
-        if (retryError) {
-            console.error("Error creating sport without icon:", retryError)
-            return { error: `No se pudo crear el deporte: ${retryError.message}` }
-        }
-
-        revalidateFacilities()
-        return { success: true }
+    if (lookupError) {
+        return { error: `No se pudo validar el deporte: ${lookupError.message}` }
     }
 
-    if (error) {
-        console.error("Error creating sport:", error)
-        return { error: `No se pudo crear el deporte: ${error.message}` }
+    let sportId = existingSport?.id
+
+    if (!sportId) {
+        let { data: createdSport, error: createError } = await supabase
+            .from("sports")
+            .insert({ name, icon_url: iconUrl || null })
+            .select("id")
+            .single()
+
+        if (createError?.message.includes("Could not find the 'icon_url' column")) {
+            const retry = await supabase
+                .from("sports")
+                .insert({ name })
+                .select("id")
+                .single()
+
+            createdSport = retry.data
+            createError = retry.error
+        }
+
+        if (createError) {
+            console.error("Error creating sport:", createError)
+            return { error: `No se pudo crear el deporte: ${createError.message}` }
+        }
+
+        sportId = createdSport?.id
+    }
+
+    if (!sportId) {
+        return { error: "No se pudo identificar el deporte creado." }
+    }
+
+    const { error: associationError } = await supabase
+        .from("complex_sports")
+        .upsert({
+            complex_id: complexId,
+            sport_id: sportId,
+            created_by: user.id,
+        }, {
+            onConflict: "complex_id,sport_id",
+            ignoreDuplicates: true,
+        })
+
+    if (associationError) {
+        return { error: `No se pudo agregar el deporte al complejo: ${associationError.message}` }
     }
 
     revalidateFacilities()
     return { success: true }
 }
 
-export async function deleteSport(id: string) {
-    return deleteSports([id])
+export async function deleteSport(id: string, complexId: string) {
+    return deleteSports([id], complexId)
 }
 
-export async function deleteSports(ids: string[]) {
-    await requireSuperAdmin()
+export async function deleteSports(ids: string[], expectedComplexId?: string | null) {
+    await requireAdmin()
 
     const sportIds = [...new Set(ids.map((id) => id.trim()).filter(Boolean))]
-    if (!sportIds.length) {
+    const complexId = expectedComplexId?.trim()
+    if (!sportIds.length || !complexId) {
         return { error: "Selecciona al menos un deporte." }
     }
 
+    if (!await canManageComplex(complexId)) {
+        return { error: "No tenes permisos para administrar los deportes de ese complejo." }
+    }
+
     const supabase = await createClient()
-    const { error } = await supabase.from("sports").delete().in("id", sportIds)
+    const { count: usedSports, error: usageError } = await supabase
+        .from("courts")
+        .select("id", { count: "exact", head: true })
+        .eq("complex_id", complexId)
+        .in("sport_id", sportIds)
+
+    if (usageError) {
+        return { error: `No se pudo validar el uso de los deportes: ${usageError.message}` }
+    }
+
+    if (usedSports) {
+        return { error: "No podes quitar deportes que todavía tienen canchas o espacios asociados en este complejo." }
+    }
+
+    const { error } = await supabase
+        .from("complex_sports")
+        .delete()
+        .eq("complex_id", complexId)
+        .in("sport_id", sportIds)
 
     if (error) {
-        console.error("Error deleting sports:", error)
-        if (error.code === "23503") {
-            return {
-                error: "No se pueden eliminar los deportes seleccionados porque alguno tiene canchas, reservas u otros registros asociados.",
-            }
-        }
-        return { error: `No se pudieron eliminar los deportes: ${error.message}` }
+        console.error("Error removing sports from complex:", error)
+        return { error: `No se pudieron quitar los deportes del complejo: ${error.message}` }
     }
 
     revalidateFacilities()
@@ -190,14 +290,18 @@ export async function createCourt(formData: FormData) {
         return { error: "No tenes permisos para administrar las canchas de ese complejo." }
     }
 
-    const { data: sport, error: sportError } = await supabase
-        .from("sports")
-        .select("id, name")
-        .eq("id", sportId)
+    const { data: sportAssociation, error: sportError } = await supabase
+        .from("complex_sports")
+        .select("sports(id, name)")
+        .eq("complex_id", selectedComplexId)
+        .eq("sport_id", sportId)
         .maybeSingle()
+    const sport = Array.isArray(sportAssociation?.sports)
+        ? sportAssociation.sports[0]
+        : sportAssociation?.sports
 
     if (sportError || !sport) {
-        return { error: "El deporte seleccionado no existe." }
+        return { error: "El deporte seleccionado no está habilitado para este complejo." }
     }
 
     const { error } = await supabase.from("courts").insert({
@@ -267,14 +371,18 @@ export async function updateCourt(formData: FormData) {
         return { error: "No tenes permisos para modificar esta cancha." }
     }
 
-    const { data: sport, error: sportError } = await supabase
-        .from("sports")
-        .select("id, name")
-        .eq("id", sportId)
+    const { data: sportAssociation, error: sportError } = await supabase
+        .from("complex_sports")
+        .select("sports(id, name)")
+        .eq("complex_id", court.complex_id)
+        .eq("sport_id", sportId)
         .maybeSingle()
+    const sport = Array.isArray(sportAssociation?.sports)
+        ? sportAssociation.sports[0]
+        : sportAssociation?.sports
 
     if (sportError || !sport) {
-        return { error: "El deporte seleccionado no existe." }
+        return { error: "El deporte seleccionado no está habilitado para este complejo." }
     }
 
     const updates = {
@@ -371,6 +479,9 @@ export async function deleteCourts(ids: string[], expectedComplexId?: string | n
 }
 
 function revalidateFacilities() {
+    revalidatePath("/")
+    revalidatePath("/reservar")
+    revalidatePath("/complejo")
     revalidatePath("/configuracion")
     revalidatePath("/profesores")
     revalidatePath("/turnos")

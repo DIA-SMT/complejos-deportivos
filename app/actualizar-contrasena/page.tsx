@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 
 export default function ActualizarContrasenaPage() {
     return (
-        <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+        <main className="flex min-h-screen items-center justify-center bg-[#edf4fb] p-4 dark:bg-[#09111f]">
             <Card className="w-full max-w-md">
                 <CardHeader>
                     <CardTitle>Actualizar contrasena</CardTitle>

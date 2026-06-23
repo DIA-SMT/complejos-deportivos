@@ -12,7 +12,7 @@ export default async function MiPerfilPage() {
     const user = await requireAuth()
 
     return (
-        <main className="min-h-screen bg-muted/30 p-4">
+        <main className="min-h-screen bg-[#edf4fb] p-4 dark:bg-[#09111f]">
             <div className="mx-auto w-full max-w-5xl space-y-4 py-6">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                     <Button asChild variant="ghost">
@@ -26,7 +26,7 @@ export default async function MiPerfilPage() {
                     </form>
                 </div>
 
-                <section className="rounded-lg border bg-background p-6">
+                <section className="rounded-2xl border border-blue-100/90 bg-white/75 p-6 shadow-[0_12px_32px_rgba(51,78,110,0.08)] backdrop-blur-sm dark:border-white/10 dark:bg-[#07101f]/80">
                     <p className="text-sm font-medium text-primary">Cuenta</p>
                     <h1 className="mt-2 text-3xl font-bold tracking-tight">Mi perfil</h1>
                     <p className="mt-2 max-w-2xl text-muted-foreground">

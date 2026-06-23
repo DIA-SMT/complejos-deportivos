@@ -21,7 +21,7 @@ export default async function ElegirComplejoPage({
     ])
 
     return (
-        <main className="min-h-screen bg-muted/30 p-4">
+        <main className="min-h-screen bg-[#edf4fb] p-4 dark:bg-[#09111f]">
             <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center gap-4">
                 <div className="flex items-center justify-between gap-3">
                     <Button asChild variant="ghost">
@@ -60,7 +60,7 @@ export default async function ElegirComplejoPage({
                                         <input type="hidden" name="complexId" value={complex.id} />
                                         <button
                                             type="submit"
-                                            className="flex h-full w-full flex-col gap-4 rounded-lg border bg-background p-4 text-left transition-colors hover:border-primary hover:shadow-sm"
+                                            className="flex h-full w-full flex-col gap-4 rounded-2xl border border-blue-100/90 bg-white/80 p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg dark:border-white/10 dark:bg-[#0a1426]"
                                         >
                                             <div className="flex items-start gap-4">
                                                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted">

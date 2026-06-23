@@ -8,11 +8,10 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { ComplexBranding } from "@/lib/complex-config"
 
 type AuthMode = "login" | "signup"
 
-export function LoginForm({ branding }: { branding: ComplexBranding }) {
+export function LoginForm() {
     const [mode, setMode] = useState<AuthMode>("login")
     const [email, setEmail] = useState("")
     const [password, setPassword] = useState("")
@@ -144,25 +143,28 @@ export function LoginForm({ branding }: { branding: ComplexBranding }) {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-sky-50 to-white p-4 dark:from-gray-950 dark:via-slate-900 dark:to-gray-950">
-            <div className="mx-auto mb-6 flex max-w-5xl items-center justify-between rounded-lg border border-emerald-200 bg-white/80 px-4 py-3 text-sm shadow-sm backdrop-blur dark:border-emerald-900 dark:bg-slate-950/80">
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_30%),linear-gradient(135deg,#e5eef8,#f4f8fc_55%,#eaf2fb)] p-4 dark:bg-[radial-gradient(circle_at_top_left,rgba(37,99,235,0.2),transparent_30%),linear-gradient(135deg,#050b18,#0a1426_55%,#07101f)]">
+            <div className="mx-auto mb-6 flex max-w-5xl items-center justify-between rounded-2xl border border-blue-100/80 bg-white/70 px-5 py-4 text-sm shadow-[0_12px_32px_rgba(51,78,110,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#07101f]/75">
                 <div>
-                    <p className="font-semibold text-emerald-700 dark:text-emerald-300">Portal de complejos deportivos</p>
+                    <p className="font-semibold text-blue-700 dark:text-blue-300">Portal de complejos deportivos</p>
                     <p className="text-muted-foreground">Los usuarios consultan complejos; los administradores gestionan la operacion.</p>
                 </div>
             </div>
             <div className="flex min-h-[calc(100vh-7rem)] items-center justify-center">
-                <Card className="w-full max-w-md">
+                <Card className="w-full max-w-md border-blue-100/90 bg-white/88 shadow-[0_24px_70px_rgba(51,78,110,0.16)] dark:bg-[#0a1426]/92">
                     <CardHeader className="flex flex-col items-center space-y-1">
                         <div className="mb-4">
                             <Image
-                                src={branding.logoSrc}
-                                alt={branding.logoAlt}
-                                width={150}
-                                height={50}
-                                className="h-auto max-h-20 w-auto object-contain"
+                                src="/logoMuni-sm.png"
+                                alt="Logo de Deportes Municipio"
+                                width={88}
+                                height={88}
+                                className="h-20 w-20 rounded-2xl bg-white object-contain p-1 shadow-sm"
                             />
                         </div>
+                        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-blue-600 dark:text-blue-300">
+                            Deportes Municipio
+                        </p>
                         <CardTitle className="text-center text-2xl font-bold">
                             {mode === "login" ? "Iniciar sesion" : "Crear cuenta"}
                         </CardTitle>
@@ -172,7 +174,7 @@ export function LoginForm({ branding }: { branding: ComplexBranding }) {
                                 : "La cuenta se crea como usuario normal. Los admins se asignan internamente."}
                         </CardDescription>
                         <p className="text-center text-xs text-muted-foreground">
-                            {branding.appName} · {branding.displayName}
+                            Portal municipal de complejos deportivos
                         </p>
                     </CardHeader>
                     <CardContent>
@@ -243,9 +245,8 @@ export function LoginForm({ branding }: { branding: ComplexBranding }) {
 
                         <div className="mt-8 space-y-1 text-center text-xs text-muted-foreground">
                             <p>&copy; {new Date().getFullYear()}</p>
-                            {branding.footerLines.map((line) => (
-                                <p key={line}>{line}</p>
-                            ))}
+                            <p>Deportes Municipio</p>
+                            <p>Gestión y reservas deportivas</p>
                         </div>
                     </CardContent>
                 </Card>

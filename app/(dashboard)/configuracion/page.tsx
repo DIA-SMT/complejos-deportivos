@@ -22,7 +22,7 @@ export default async function ConfiguracionPage({
     const selectedComplexId = isNewComplex ? null : params?.complexId || activeComplexId || complexes[0]?.id || null
     const [branding, sports, courts] = await Promise.all([
         isNewComplex ? getNewComplexBranding() : getComplexBranding(selectedComplexId),
-        getSports(),
+        selectedComplexId ? getSports({ complexId: selectedComplexId }) : Promise.resolve([]),
         selectedComplexId ? getCourts({ complexId: selectedComplexId }) : Promise.resolve([]),
     ])
 
@@ -49,7 +49,7 @@ export default async function ConfiguracionPage({
                         </div>
                     ) : null}
 
-                    <div className="flex flex-wrap gap-2 rounded-lg border bg-muted/20 p-4">
+                    <div className="flex flex-wrap gap-2 rounded-xl border border-blue-100 bg-blue-50/60 p-4 dark:border-white/10 dark:bg-white/5">
                         {complexes.map((complex) => (
                             <Button
                                 key={complex.id}
@@ -74,7 +74,7 @@ export default async function ConfiguracionPage({
                         <div className="mb-5">
                             <h2 className="text-xl font-semibold tracking-tight">Deportes y canchas</h2>
                             <p className="mt-1 text-sm text-muted-foreground">
-                                Las disciplinas son generales de la plataforma; las canchas y espacios quedan asociados al complejo seleccionado.
+                                Los deportes, canchas y espacios quedan asociados al complejo seleccionado.
                             </p>
                         </div>
                         {isNewComplex ? (
@@ -87,7 +87,7 @@ export default async function ConfiguracionPage({
                                 sports={sports}
                                 courts={courts}
                                 selectedComplexId={selectedComplexId}
-                                canManageSports={user.role === "superadmin"}
+                                canManageSports={Boolean(selectedComplexId)}
                             />
                         )}
                     </div>

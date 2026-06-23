@@ -63,7 +63,7 @@ export default async function SociosPage() {
                                     const credential = member.member_credentials[0]
 
                                     return (
-                                        <div key={member.id} className="rounded-lg border p-4">
+                                        <div key={member.id} className="rounded-xl border border-blue-100/90 bg-white/55 p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
                                             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                                                 <div>
                                                     <h3 className="font-semibold">{member.first_name} {member.last_name}</h3>

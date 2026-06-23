@@ -21,7 +21,7 @@ export default async function SeleccionarComplejoPage({
     ])
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+        <main className="flex min-h-screen items-center justify-center bg-[#edf4fb] p-4 dark:bg-[#09111f]">
             <Card className="w-full max-w-3xl">
                 <CardHeader>
                     <CardTitle>Elegir complejo</CardTitle>
@@ -47,7 +47,7 @@ export default async function SeleccionarComplejoPage({
                                     <input type="hidden" name="complexId" value={complex.id} />
                                     <button
                                         type="submit"
-                                        className="flex h-full w-full items-start gap-4 rounded-lg border bg-background p-4 text-left transition-colors hover:border-primary"
+                                        className="flex h-full w-full items-start gap-4 rounded-2xl border border-blue-100/90 bg-white/80 p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-lg dark:border-white/10 dark:bg-[#0a1426]"
                                     >
                                         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-md bg-muted">
                                             {complex.logo_url ? (

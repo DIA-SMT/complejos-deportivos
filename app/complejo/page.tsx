@@ -45,8 +45,8 @@ export default async function ComplejoPage() {
     })
 
     return (
-        <main className="min-h-screen bg-background">
-            <header className="sticky top-0 z-30 border-b bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/70">
+        <main className="min-h-screen bg-[#edf4fb] dark:bg-[#09111f]">
+            <header className="sticky top-0 z-30 border-b border-blue-100/80 bg-white/75 px-4 py-3 shadow-sm backdrop-blur-xl dark:border-white/8 dark:bg-[#07101f]/80">
                 <div className="mx-auto flex max-w-7xl items-center justify-between gap-3">
                     <Link href="/" className="flex items-center gap-3">
                         <div className="flex h-10 w-10 items-center justify-center rounded-md bg-muted">
@@ -94,8 +94,8 @@ export default async function ComplejoPage() {
             </header>
 
             <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 md:py-8">
-                <section className="relative overflow-hidden rounded-lg border bg-card">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-background to-background" />
+                <section className="relative overflow-hidden rounded-2xl border border-blue-100/90 bg-white/80 shadow-[0_18px_45px_rgba(51,78,110,0.10)] dark:border-white/10 dark:bg-[#0a1426]">
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-100/80 via-white/30 to-transparent dark:from-blue-950/45 dark:via-transparent dark:to-transparent" />
                     <div className="relative grid gap-6 p-6 lg:grid-cols-[1fr_260px] lg:p-8">
                         <div className="space-y-5">
                             <div className="flex flex-wrap items-center gap-3">

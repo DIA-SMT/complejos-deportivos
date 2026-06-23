@@ -78,7 +78,7 @@ export default async function CredencialPage({
     const validation = getValidationResult(credential)
 
     return (
-        <main className="flex min-h-screen items-center justify-center bg-muted/30 p-4">
+        <main className="flex min-h-screen items-center justify-center bg-[#edf4fb] p-4 dark:bg-[#09111f]">
             <div className="w-full max-w-2xl space-y-4">
                 {credential ? (
                     <>

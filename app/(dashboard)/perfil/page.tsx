@@ -11,7 +11,7 @@ export default async function PerfilPage() {
 
     return (
         <div className="flex flex-col space-y-6">
-            <div className="relative w-full h-[250px] sm:h-[300px] rounded-xl overflow-hidden mb-8 shadow-xl animate-fade-in group">
+            <div className="group relative mb-8 h-[250px] w-full overflow-hidden rounded-2xl border border-blue-200/20 shadow-[0_20px_50px_rgba(30,64,175,0.18)] animate-fade-in sm:h-[300px]">
                 <div className="absolute inset-0 bg-blue-900/20">
                     <img
                         src="/images/perfil.png"

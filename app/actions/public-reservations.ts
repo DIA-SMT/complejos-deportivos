@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from "next/cache"
+import { addDays, format } from "date-fns"
 import { getUserActiveComplexId } from "@/app/actions/complex-settings"
 import { createClient } from "@/utils/supabase/server"
 
@@ -14,6 +15,59 @@ export type UserReservationRequest = {
     created_at: string
     courts: { name: string } | null
     complexes: { name: string } | null
+}
+
+export type PublicAvailabilityBlock = {
+    court_id: string
+    date: string
+    start_time: string
+    end_time: string | null
+}
+
+export async function getPublicAvailabilityBlocks(): Promise<PublicAvailabilityBlock[]> {
+    const supabase = await createClient()
+    const today = new Date()
+    const startDate = format(today, "yyyy-MM-dd")
+    const endDate = format(addDays(today, 13), "yyyy-MM-dd")
+
+    const [shiftsResult, requestsResult] = await Promise.all([
+        supabase
+            .from("shifts")
+            .select("court_id, date, start_time, end_time")
+            .not("court_id", "is", null)
+            .neq("status", "cancelled")
+            .gte("date", startDate)
+            .lte("date", endDate),
+        supabase
+            .from("reservation_requests")
+            .select("court_id, preferred_date, preferred_time")
+            .not("court_id", "is", null)
+            .in("status", ["pending", "confirmed"])
+            .gte("preferred_date", startDate)
+            .lte("preferred_date", endDate),
+    ])
+
+    if (shiftsResult.error) {
+        console.error("Error fetching public shifts availability:", shiftsResult.error)
+    }
+    if (requestsResult.error) {
+        console.error("Error fetching public requests availability:", requestsResult.error)
+    }
+
+    return [
+        ...(shiftsResult.data || []).map((shift) => ({
+            court_id: shift.court_id as string,
+            date: shift.date,
+            start_time: shift.start_time,
+            end_time: shift.end_time,
+        })),
+        ...(requestsResult.data || []).map((request) => ({
+            court_id: request.court_id as string,
+            date: request.preferred_date,
+            start_time: request.preferred_time,
+            end_time: null,
+        })),
+    ]
 }
 
 export async function createPublicReservationRequest(formData: FormData) {
@@ -32,8 +86,8 @@ export async function createPublicReservationRequest(formData: FormData) {
         return { error: "No pudimos registrar la solicitud. Intenta nuevamente." }
     }
 
-    if (!fullName || !phone || !sportId || !preferredDate || !preferredTime) {
-        return { error: "Completa nombre, telefono, actividad, fecha y horario." }
+    if (!fullName || !phone || !complexId || !sportId || !courtId || !preferredDate || !preferredTime) {
+        return { error: "Completa nombre, teléfono, complejo, actividad, cancha, fecha y horario." }
     }
 
     if (fullName.length < 3 || fullName.length > 120) {
@@ -57,44 +111,82 @@ export async function createPublicReservationRequest(formData: FormData) {
         return { error: "La fecha no puede ser anterior a hoy." }
     }
 
-    const supabase = await createClient()
-    const { data: sport, error: sportError } = await supabase
-        .from("sports")
-        .select("id, name")
-        .eq("id", sportId)
-        .maybeSingle()
-
-    if (sportError || !sport) {
-        return { error: "La actividad seleccionada no existe." }
+    if (!/^(0[8-9]|1[0-9]|2[0-1]):00$/.test(preferredTime.slice(0, 5))) {
+        return { error: "Seleccioná uno de los horarios disponibles." }
     }
 
-    if (courtId) {
-        const { data: court, error: courtError } = await supabase
-            .from("courts")
-            .select("id, sport_id, complex_id")
-            .eq("id", courtId)
-            .maybeSingle()
+    const supabase = await createClient()
+    const { data: sportAssociation, error: sportError } = await supabase
+        .from("complex_sports")
+        .select("sports(id, name)")
+        .eq("complex_id", complexId)
+        .eq("sport_id", sportId)
+        .maybeSingle()
+    const sport = Array.isArray(sportAssociation?.sports)
+        ? sportAssociation.sports[0]
+        : sportAssociation?.sports
 
-        if (courtError || !court) {
-            return { error: "La cancha seleccionada no existe." }
-        }
+    if (sportError || !sport) {
+        return { error: "La actividad seleccionada no está disponible en el complejo elegido." }
+    }
 
-        if (court.sport_id !== sport.id) {
-            return { error: "La cancha seleccionada no corresponde a la actividad elegida." }
-        }
+    const { data: court, error: courtError } = await supabase
+        .from("courts")
+        .select("id, sport_id, complex_id")
+        .eq("id", courtId)
+        .maybeSingle()
 
-        if (complexId && court.complex_id && court.complex_id !== complexId) {
-            return { error: "La cancha seleccionada no pertenece al complejo elegido." }
-        }
+    if (courtError || !court) {
+        return { error: "La cancha seleccionada no existe." }
+    }
+
+    if (court.sport_id !== sport.id) {
+        return { error: "La cancha seleccionada no corresponde a la actividad elegida." }
+    }
+
+    if (court.complex_id !== complexId) {
+        return { error: "La cancha seleccionada no pertenece al complejo elegido." }
+    }
+
+    const requestedStart = preferredTime.slice(0, 5)
+    const [requestedHour, requestedMinute] = requestedStart.split(":").map(Number)
+    const requestedEndMinutes = requestedHour * 60 + requestedMinute + 60
+    const requestedEnd = `${Math.floor(requestedEndMinutes / 60).toString().padStart(2, "0")}:${(requestedEndMinutes % 60).toString().padStart(2, "0")}`
+    const [shiftConflicts, requestConflicts] = await Promise.all([
+        supabase
+            .from("shifts")
+            .select("id")
+            .eq("court_id", courtId)
+            .eq("date", preferredDate)
+            .neq("status", "cancelled")
+            .lt("start_time", requestedEnd)
+            .gt("end_time", requestedStart)
+            .limit(1),
+        supabase
+            .from("reservation_requests")
+            .select("id")
+            .eq("court_id", courtId)
+            .eq("preferred_date", preferredDate)
+            .eq("preferred_time", requestedStart)
+            .in("status", ["pending", "confirmed"])
+            .limit(1),
+    ])
+
+    if (shiftConflicts.error || requestConflicts.error) {
+        return { error: "No pudimos confirmar la disponibilidad. Intenta nuevamente." }
+    }
+
+    if (shiftConflicts.data?.length || requestConflicts.data?.length) {
+        return { error: "Ese horario acaba de dejar de estar disponible. Elegí otro turno." }
     }
 
     const { error: requestError } = await supabase.rpc("create_public_reservation_request", {
         p_full_name: fullName,
         p_phone: phone,
         p_email: email || null,
-        p_complex_id: complexId || null,
+        p_complex_id: complexId,
         p_sport_id: sport.id,
-        p_court_id: courtId || null,
+        p_court_id: courtId,
         p_preferred_date: preferredDate,
         p_preferred_time: preferredTime,
         p_notes: notes || null,

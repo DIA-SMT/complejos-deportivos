@@ -26,7 +26,7 @@ export function Sidebar({ className, branding, canManageSettings = false, canMan
     }
 
     return (
-        <div className={cn("pb-4 h-full flex flex-col transition-all duration-300", className)}>
+        <div className={cn("h-full flex flex-col pb-4 text-slate-700 transition-all duration-300 dark:text-slate-200", className)}>
             <div className="space-y-4 py-4 flex-1">
                 <div className="px-3 py-2">
                     {/* Toggle Button - Only show on desktop */}
@@ -51,7 +51,7 @@ export function Sidebar({ className, branding, canManageSettings = false, canMan
                             <h2 className="mb-2 px-4 text-xs font-semibold tracking-tight text-muted-foreground uppercase">
                                 
                             </h2>
-                            <h1 className="mb-6 px-4 text-xl font-bold tracking-tight">
+                            <h1 className="mb-6 px-4 text-xl font-bold tracking-tight text-slate-950 dark:text-white">
                                 {branding.appName}
                                 <span className="block text-sm font-normal text-muted-foreground">{branding.displayName}</span>
                             </h1>

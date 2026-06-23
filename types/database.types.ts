@@ -167,6 +167,49 @@ export type Database = {
                     }
                 ]
             }
+            complex_sports: {
+                Row: {
+                    complex_id: string
+                    sport_id: string
+                    created_at: string
+                    created_by: string | null
+                }
+                Insert: {
+                    complex_id: string
+                    sport_id: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Update: {
+                    complex_id?: string
+                    sport_id?: string
+                    created_at?: string
+                    created_by?: string | null
+                }
+                Relationships: [
+                    {
+                        foreignKeyName: "complex_sports_complex_id_fkey"
+                        columns: ["complex_id"]
+                        isOneToOne: false
+                        referencedRelation: "complexes"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_sports_sport_id_fkey"
+                        columns: ["sport_id"]
+                        isOneToOne: false
+                        referencedRelation: "sports"
+                        referencedColumns: ["id"]
+                    },
+                    {
+                        foreignKeyName: "complex_sports_created_by_fkey"
+                        columns: ["created_by"]
+                        isOneToOne: false
+                        referencedRelation: "user_profiles"
+                        referencedColumns: ["id"]
+                    }
+                ]
+            }
 
             courts: {
                 Row: {
